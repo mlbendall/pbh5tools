@@ -38,11 +38,7 @@ import pkg_resources
 from pbtools.pbh5tools.BasH5ToData import BASH5Data
 from pbcore.util.ToolRunner import PBToolRunner
 
-__p4revision__ = "$Revision$"
-__p4change__ = "$Change$"
-revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
-changeNum = int(__p4change__.strip("$").split(":")[-1])
-__version__ = "%s-r%d-c%d" % ( pkg_resources.require("pbtools.pbh5tools")[0].version, revNum, changeNum )
+__version__ = "0.4.0"
 
 
 class BasH5ToolsRunner(PBToolRunner):

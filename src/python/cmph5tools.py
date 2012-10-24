@@ -46,11 +46,7 @@ from pbtools.pbh5tools.CmpH5Trim import CmpH5Sampler, CmpH5Splitter
 from pbtools.pbh5tools.CmpH5Stats import CmpH5Stats
 from pbtools.pbh5tools.CmpH5Summary import CmpH5Summary
 
-__p4revision__ = "$Revision$"
-__p4change__ = "$Change$"
-revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
-changeNum = int(__p4change__.strip("$").split(":")[-1])
-__version__ = "%s-r%d-c%d" % ( pkg_resources.require("pbtools.pbh5tools")[0].version, revNum, changeNum )
+__version__ = "0.4.0"
 
 class CmpH5ToolsRunner(PBMultiToolRunner):
     def __init__(self):
