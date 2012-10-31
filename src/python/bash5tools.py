@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #################################################################################$$
 # Copyright (c) 2011,2012, Pacific Biosciences of California, Inc.
 #
@@ -27,8 +29,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #################################################################################$$
 
-
-#!/usr/bin/env python
 import os
 import sys
 import argparse
