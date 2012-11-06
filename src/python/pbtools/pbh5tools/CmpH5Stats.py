@@ -33,55 +33,189 @@ import numpy as np
 
 from pbcore.io import CmpH5Reader
 
-def getReadLength(cmpH5, idx):
-    return cmpH5.rEnd[idx] - cmpH5.rStart[idx]
+class Csv(object):
+    def __init__(self, **args):
+        self.cols = args
+    def __iter__(self):
+        for a in self.cols:
+            yield (a, self.cols[a])
 
-def getUnrolledReadLength(cmpH5, idx):
-    pass
+def hasEval(thing):
+    ## duck typing
+    return 'eval' in dir(thing)
 
-def getAccuracy(cmpH5, idx):
-    return (1.0 - ((cmpH5.nMM[idx] + cmpH5.nIns[idx] + cmpH5.nDel[idx])/(0.0 + getReadLength(cmpH5, idx))))
+def procMe(thing):
+    if hasEval(thing):
+        return lambda cmpH5, idx : thing.eval(cmpH5, idx)
+    else:
+        return lambda cmpH5, idx : thing
 
-def getNSubreads(cmpH5, idx):
-    return len(idx)
+class Expr(object):
+    def eval(self, cmpH5, idx):
+        pass
 
-def getNMolecules(cmpH5, idx):
-    len(set(zip(cmpH5.MovieID[idx], cmpH5.HoleNumber[idx])))
+    def __add__(self, other):
+        return BinOp(self, other, '+')
+    def __div__(self, other):
+        return BinOp(self, other, '/')
+    def __sub__(self, other):
+        return BinOp(self, other, '-')
+    def __mul__(self, other):
+        return BinOp(self, other, '*')
 
-def getPolymerizationRate(cmpH5, idx):
-    pass
+    def __radd__(self, other):
+        return BinOp(other, self, "+")
+    def __rdiv__(self, other):
+        return BinOp(other, self, "/")
+    def __rsub__(self, other):
+        return BinOp(other, self, "-")
+    def __rmul__(self, other):
+        return BinOp(other, self, "*")
     
+class BinOp(Expr):
+    def __init__(self, l, r, op):
+        self.l  = procMe(l)
+        self.r  = procMe(r)
+        self.op = op
+
+    def eval(self, cmpH5, idx):
+        if self.op == '+':
+            return self.l(cmpH5, idx) + self.r(cmpH5, idx)
+        elif self.op == '-':
+            return self.l(cmpH5, idx) - self.r(cmpH5, idx)
+        elif self.op == '/':
+            return self.l(cmpH5, idx) / self.r(cmpH5, idx)
+        elif self.op == '*':
+            return self.l(cmpH5, idx) * self.r(cmpH5, idx)
+        else:
+            raise Exception("Undefined operation:" + self.op)
+
+class Flatten(Expr):
+    def __init__(self, expr):
+        self.expr = expr
+
+    def eval(self, cmpH5, idx):
+        r = self.expr.eval(cmpH5, idx)
+        if isinstance(r, (list, tuple)):
+            return np.concatenate(r)
+        else:
+            return r
+
+class Statistic(Expr):
+    def __init__(self, metric):
+        self.metric = metric
+
+    def eval(self, cmpH5, idx):
+        r = self.metric.eval(cmpH5, idx)
+        if isinstance(r, (list, tuple)):
+            return np.array([self.f(rr) for rr in r])
+        else:
+            return self.f(r)
+
+class Mean(Statistic):
+    def f(self, x): 
+        return np.mean(x)
+
+class Median(Statistic):
+    def f(self, x):
+        return np.median(x)
+
+class Q(Statistic):
+    def __init__(self, metric, qtile = 95.0):
+        super(Q, self).__init__(metric)
+        self.qtile = qtile
+
+    def f(self, x):
+        return np.percentile(x, self.qtile)
+
+class Metric(Expr):
+    def __init__(self):
+        self.r = None
+
+    def eval(self, cmpH5, idx):
+        return self.produce(cmpH5, idx)
+        # if None == self.r:
+        #     self.r = 
+        # return self.r 
+
+class _TemplateSpan(Metric):
+    def produce(self, cmpH5, idx):
+        return (cmpH5.tEnd[idx] - cmpH5.tStart[idx])
+
+class _ReadLength(Metric):
+    def produce(self, cmpH5, idx):
+        return (cmpH5.rEnd[idx] - cmpH5.rStart[idx])
+
+class _NErrors(Metric):
+    def produce(self, cmpH5, idx):
+        return (cmpH5.nMM[idx] + cmpH5.nIns[idx] + cmpH5.nDel[idx])
+
+class _ReadDuration(Metric):
+    def produce(self, cmpH5, idx):
+        return np.array([ sum(cmpH5[i].IPD() + cmpH5[i].PulseWidth()) 
+                          for i in idx ])
+class _FrameRate(Metric):
+    def produce(self, cmpH5, idx):
+        return np.array([ cmpH5[i].movieInfo.FrameRate for i in idx ])
+
+class _IPD(Metric):
+    def produce(self, cmpH5, idx):
+        return [ cmpH5[i].IPD() for i in idx ]
+
+class _PulseWidth(Metric):
+    def produce(self, cmpH5, idx):
+        return [ cmpH5[i].PulseWidth() for i in idx ] 
+
+################################################################################
+##
+## Define the core metrics, try to define all metrics in terms of some
+## basic metrics.
+##
+################################################################################
+ReadLength          = _ReadLength()
+TemplateSpan        = _TemplateSpan()
+NErrors             = _NErrors()    
+ReadFrames          = _ReadDuration() * 1.0
+FrameRate           = _FrameRate()
+IPD                 = _IPD()
+PulseWidth          = _PulseWidth()
+Accuracy            = 1.0 - NErrors/(ReadLength * 1.0)
+PolRate             = TemplateSpan/(ReadFrames/(FrameRate * 1.0))
+ReadLength          = ReadLength
+
+
 class CmpH5Stats(object):
     def __init__(self, cmpH5Filename, groupBy = None):
         self.groupBy = groupBy
         self.reader  = CmpH5Reader(cmpH5Filename)
+        self.csv     = Csv(mean_accuracy   = Mean(Accuracy), 
+                           meanReadLength  = Mean(ReadLength),
+                           medianPolRate   = Median(PolRate),
+                           meanPolRate     = Mean(PolRate),
+                           meanIPD         = Mean(Flatten(IPD)),
+                           medianIPD       = Median(Flatten(IPD)))
         
-    def summarizeDataForStrata(self, idx):
-        metricsToCache = {'MappedSubreadReadLength' : getReadLength, 
-                          'MappedReadLength'        : getUnrolledReadLength, 
-                          'SumOfMappedBases'        : getSumOfMappedBases, 
-                          'Accuracy'                : getAccuracy, 
-                          'PolymerizationRate'      : getPolymerizationRate} 
-        dtaCache = {key : metricsToCache[key](self.reader, idx) for key in metricsToCache.keys()}
-        
-        return ({ 
-                "MeanMappedSubreadReadLength" : np.mean(dtaCache["MappedSubreadReadLength"]),
-                "MedianMappedSubreadReadLength" : np.median(dtaCache["MappedSubreadReadLength"]),
-                
-                
-                        })
-
-    def run(self):
-        ## groupBy becomes a list of index vectors.
+        ## make a hash where each element contains indices of the
+        ## subreads for the strata.
         if self.groupBy == 'movie':
             movieNames  = [self.reader.movieInfo(id)[1] for id in self.reader.MovieID]
             uMovieNames = set(movieNames)
-            idxs = dict([(elt, np.where([ elt == m for m in mn ])[0]) for elt in umn])
+            self.idxs = dict([(elt, np.where([ elt == m for m in mn ])[0]) 
+                              for elt in uMovieNames])
         else:
-            idxs = {"" : np.arange(0, len(self.reader))}
-          
-        dta = { key : summarizeDataForStrata(idxs[key]) for key in idxs.keys() }
-            
-            
+            self.idxs = {"" : np.arange(0, 100)}
 
         
+    def processIdxSet(self, idx):
+        for e in self.csv:
+            print e[0]
+            print e[1].eval(self.reader, idx)
+        
+    
+    def emitToCsv(self, dta):
+        from IPython.Shell import IPShellEmbed; IPShellEmbed(argv=[])()
+        pass
+
+    def run(self):
+        self.emitToCsv({ key : self.processIdxSet(self.idxs[key]) for key in 
+                         self.idxs.keys() })

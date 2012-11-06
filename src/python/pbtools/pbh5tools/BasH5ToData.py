@@ -61,7 +61,7 @@ class BASH5Data(BasH5):
                     yield (hn, self.baseCallsDG.getBaseCallForZMW(hn))
 
     def toFastx(self, outFNPref='', fileType='fasta', subreadsplit=False):
-        movieName = os.path.basename(self._h5f.filename).split('.')[0]
+        movieName = os.path.basename(self._h5f.filename.split('.')[0])
         outFN = '%s.%s' % (movieName, fileType)
         if outFNPref:
             outFN = '%s.%s' % (outFNPref, fileType)
@@ -76,12 +76,7 @@ class BASH5Data(BasH5):
                         read = self.rbaseCallsDG.getBaseCallForZMW(hn)
                         subreads = self.baseCallsDG.getCCSSubreadsRegionsForZMW(hn)
                     for i,subread in enumerate(subreads):
-                        HQR, HQS = list(self.rgnTable.getHQRegionForZMW(hn))
-                        if subread[0] < HQR[0]:
-                            subread[0] = HQR[0]
-                        if subread[1] > HQR[1]:
-                            subread[1] = HQR[1]
-                        if subread[1] <= subread[0] + 100: continue 
+                        if subread[1] <= subread[0]: continue 
                         fout.write('>%s/%d/%d_%d\n' % (movieName, hn, subread[0], subread[1]))                
                         fout.write('%s\n' % read[subread[0]:subread[1]])        
                 else:
@@ -93,16 +88,11 @@ class BASH5Data(BasH5):
                 qvs = self.baseCallsDG.getQVForZMW(hn, 'QualityValue')
                 if subreadsplit:
                     subreads = self.rgnTable.getInsertRegionForZMW(hn)
-                    HQR, HQS = list(self.rgnTable.getHQRegionForZMW(hn))
                     if self.baseCallsDG.baseCallType == 'CCS':
                         read = self.rbaseCallsDG.getBaseCallForZMW(hn)
                         subreads = self.baseCallsDG.getCCSSubreadsRegionsForZMW(hn)
                     for i,subread in enumerate(subreads):
-                        if subread[0] < HQR[0]:
-                            subread[0] = HQR[0]
-                        if subread[1] > HQR[1]:
-                            subread[1] = HQR[1]
-                        if subread[1] <= subread[0] + 100: continue 
+                        if subread[1] <= subread[0]: continue 
                         fout.write('>%s/%d/%d_%d\n' % (movieName, hn, subread[0], subread[1]))                
                         fout.write('%s\n+\n%s\n' % (read[subread[0]:subread[1]], 
                                                     ''.join(map(chr, qvs[subread[0]:subread[1]]))))                        
@@ -112,7 +102,7 @@ class BASH5Data(BasH5):
         fout.close()
 
     def toCSV(self, outFNPref=''):
-        movieName = os.path.basename(self._h5f.filename).split('.')[0]
+        movieName = os.path.basename(self._h5f.filename.split('.')[0])
         outFN = '%s.csv' % movieName
         if outFNPref:
             outFN = '%s.csv' % outFNPref
