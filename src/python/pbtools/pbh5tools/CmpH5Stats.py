@@ -87,8 +87,8 @@ class BinOp(Expr):
             return self.l(cmpH5, idx) / self.r(cmpH5, idx)
         elif self.op == '*':
             return self.l(cmpH5, idx) * self.r(cmpH5, idx)
-        elif self.op == '**':
-            return [ ':'.join((x,y)) for x,y in self.l(cmpH5, idx), self.r(cmpH5, idx) ]
+        # elif self.op == '**':
+        #     return [ ':'.join((x,y)) for x,y in self.l(cmpH5, idx), self.r(cmpH5, idx) ]
         else:
             raise Exception("Undefined operation:" + self.op)
 
@@ -191,6 +191,10 @@ IPD                 = _IPD()
 PulseWidth          = _PulseWidth()
 Accuracy            = 1.0 - NErrors/(ReadLength * 1.0)
 PolRate             = TemplateSpan/(ReadFrames/(FrameRate * 1.0))
+
+## how does this work? 
+# PulseWidth | (Base * RefSeq)
+
 
 ## 
 ## discrete metrics / stratification variables.
