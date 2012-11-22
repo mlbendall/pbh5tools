@@ -3,27 +3,27 @@
 #
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without 
+# Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# * Redistributions of source code must retain the above copyright notice, this 
+# * Redistributions of source code must retain the above copyright notice, this
 #   list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above copyright notice, 
-#   this list of conditions and the following disclaimer in the documentation 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
-# * Neither the name of Pacific Biosciences nor the names of its contributors 
-#   may be used to endorse or promote products derived from this software 
+# * Neither the name of Pacific Biosciences nor the names of its contributors
+#   may be used to endorse or promote products derived from this software
 #   without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS CONTRIBUTORS 
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
-# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR ITS 
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+#
+# THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR ITS
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 # PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 # ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #################################################################################$$
 import numpy as n
@@ -55,14 +55,19 @@ class CmpH5Merger():
         self._forceMerge = forceMerge
         self._setup()
         self.offsetResets = {} ## XXX: deep-sorting
-    
+
     def run(self):
         """
         Merge cmp.h5 files in _FNs onto seeding cmp.h5 file _seedFN
-        """              
+        """
         for fin in self._FNs:
             cmph5_in = h5py.File(fin,'r')
-            
+
+            if cmph5_in['/AlnInfo/AlnIndex'].shape[0] == 0:
+                #If there is no entry in /AlnInfo/AlnIndex,
+                #ignore this empty cmph5 file
+                continue
+
             if self._validateCmpH5(cmph5_in, self._forceMerge):
                 self.extendMovieInfo(cmph5_in)
                 self.extendRefGroup(cmph5_in)
@@ -78,7 +83,7 @@ class CmpH5Merger():
             self.cmph5_out['/AlnInfo/AlnIndex'][:,self._IDX['nBackRead']] = 0
             self.cmph5_out['/AlnInfo/AlnIndex'][:,self._IDX['nReadOverlap']] = 0
             self.cmph5_out.attrs.__delitem__('Index')
-        
+
         if 'OffsetTable' in self.cmph5_out['/RefGroup']:
             del self.cmph5_out['/RefGroup/OffsetTable']
 
@@ -93,15 +98,15 @@ class CmpH5Merger():
                     ' '.join(sys.argv),
                     'Merging')
         t_cmph5.close()
-        
+
     #################
     # Merge methods #
     #################
-    
+
     def extendAlnInfo(self, cmph5_in):
         """
         Merge cmph5_in's /AlnInfo with the seeds.
-        """       
+        """
         logging.info('Extending alninfo from [%s]' % cmph5_in.filename.split('/')[-1])
 
         aIdx_in = cmph5_in['/AlnInfo/AlnIndex'].value
@@ -116,21 +121,21 @@ class CmpH5Merger():
                 aIdx_in[i, self._IDX['Offset_end']] += reset
 
         aIdx_in[:,self._IDX['AlnID']] = aIdx_in[:,self._IDX['AlnID']] + aIdx.shape[0]
-        aIdx_in[:,self._IDX['MovieID']] = n.array([self.F_MovieID[x] for x 
+        aIdx_in[:,self._IDX['MovieID']] = n.array([self.F_MovieID[x] for x
                                                    in aIdx_in[:,self._IDX['MovieID']]], dtype='uint32')
-        aIdx_in[:,self._IDX['AlnGroupID']] = n.array([self.F_AlnGroupPath[x] for x 
+        aIdx_in[:,self._IDX['AlnGroupID']] = n.array([self.F_AlnGroupPath[x] for x
                                                       in aIdx_in[:,self._IDX['AlnGroupID']]], dtype='uint32')
-        aIdx_in[:,self._IDX['RefGroupID']] = n.array([self.F_RefGroupPath[x] for x 
+        aIdx_in[:,self._IDX['RefGroupID']] = n.array([self.F_RefGroupPath[x] for x
                                                       in aIdx_in[:,self._IDX['RefGroupID']]], dtype='uint32')
         self._extendDset(aIdx, aIdx_in)
-        
+
         for subgrp in [key for key in self.cmph5_out['/AlnInfo'].keys() if key != 'AlnIndex']:
             dout = self.cmph5_out['/AlnInfo'][subgrp]
             newVal = cmph5_in['/AlnInfo'][subgrp].value
             self._extendDset(dout, newVal)
 
         self.cmph5_out['/AlnInfo'].attrs.modify('nRow', self.cmph5_out['/AlnInfo/AlnIndex'].shape[0])
-        
+
     def mergeDatasetsFromGroups(self, cmph5_in, sourceGroupName, targetGroupName):
         ## XXX: deep-sorting
         sourceGroup = cmph5_in[sourceGroupName]
@@ -141,7 +146,7 @@ class CmpH5Merger():
                 targetDataset = targetGroup[datasetName]
                 sourceDataset = sourceGroup[datasetName]
                 if len(sourceDataset.shape) == 1:
-                    start = len(targetDataset) 
+                    start = len(targetDataset)
                     newSize = start + len(sourceDataset)
                     targetDataset.resize((newSize, ))
                     targetDataset[start:newSize] = sourceDataset[:]
@@ -149,13 +154,13 @@ class CmpH5Merger():
                 else:
                     raise Exception("Don't know how to deal with rank > 1 datasets.")
         self.offsetResets[targetGroupName] = offsetReset
-        
+
     def extendAlnGroup(self,cmph5_in):
         """
         Merge cmph5_in's /AlnGroup with the seeds.
         """
         logging.info('Extending alngroups from [%s]' % cmph5_in.filename.split('/')[-1])
-        
+
         cache_AGP = cmph5_in['/AlnGroup/Path'].value.tolist()
         lastRGRPID = n.max(self.cmph5_out['/AlnGroup/ID'].value.tolist())
         rgpMap = dict(zip(cache_AGP,cmph5_in['/AlnGroup/ID'].value.tolist()))
@@ -204,7 +209,7 @@ class CmpH5Merger():
 
         t_refDict = self._getRefDict(cmph5_in)
         lastRefID = n.max(self.cmph5_out['/RefGroup/ID'].value)
-        lastRefName = n.sort(self.cmph5_out['/RefGroup/Path'].value)[-1]       
+        lastRefName = n.sort(self.cmph5_out['/RefGroup/Path'].value)[-1]
         self.F_AlnGroupPath = {}
         self.C_RGPToCopy = {} # input rgrp: output rgrp
         changeMap = {} # inputCmph5 RefGroupPath: outputCmph5 RefGroupPath
@@ -216,14 +221,14 @@ class CmpH5Merger():
                         changeMap[ref] = backref
                         exists = True
                 if not exists:
-                    newRefName = ref 
+                    newRefName = ref
                     if ref in self.refDict:
                         t_lastRefName = n.sort(changeMap.values())[-1] if changeMap else lastRefName
-                        newRefName = '/ref%06d' % n.max(map(lambda x: int(findall('ref(\\d+)', x)[0])+1, 
+                        newRefName = '/ref%06d' % n.max(map(lambda x: int(findall('ref(\\d+)', x)[0])+1,
                                                             [t_lastRefName, lastRefName]))
                         lastRefName = newRefName
                     lastRefID += 1
-                    
+
                     changeMap[ref] = newRefName
                     self.outIDDict[newRefName] = lastRefID
         else:
@@ -236,14 +241,14 @@ class CmpH5Merger():
         cache_RIFN = self.cmph5_out['/RefInfo/FullName'].value
         cache_RIID = self.cmph5_out['/RefInfo/ID'].value
         t_lastRefInfoID = n.max(self.cmph5_out['/RefGroup/RefInfoID'])
-        
+
         refg = [[None]*len(changeMap) for i in xrange(3)] # ID, Path, RefInfoID
         refi = [[None]*len(changeMap) for i in xrange(4)] # ID, FullName, Length, MD5
         ci = 0
         cg = 0
         for oldRefPath in changeMap:
             newRefPath = changeMap[oldRefPath]
-            if not self.refDict.get(newRefPath):                
+            if not self.refDict.get(newRefPath):
                 # RefGroupID
                 self.refDict[newRefPath] = t_refDict[oldRefPath]
                 refg[0][cg] = self.outIDDict[newRefPath]
@@ -265,7 +270,7 @@ class CmpH5Merger():
                     refi[2][ci] = self.refDict[newRefPath][1]
                     refi[3][ci] = self.refDict[newRefPath][2]
                     ci += 1
-                cg += 1                
+                cg += 1
 
                 # Add new RefGroup
                 self.cmph5_out.create_group(newRefPath)
@@ -283,7 +288,7 @@ class CmpH5Merger():
                 dout = self.cmph5_out['/RefInfo'][dset[0]]
                 newVal = n.array(refi[i][:ci], dtype=dset[1])
                 self._extendDset(dout, newVal)
-        
+
         if cg:
             for i,dset in enumerate([('ID','uint32'),('Path',object),('RefInfoID','uint32')]):
                 dout = self.cmph5_out['/RefGroup'][dset[0]]
@@ -297,10 +302,10 @@ class CmpH5Merger():
         """
         Merge cmph5_in's /MovieInfo with the seeds.
         Notes: Using .value and NOT .value.tolist() to avoid strange
-        events when comparing string with numpy.object_ 
+        events when comparing string with numpy.object_
         """
-        logging.info('Merging %d movies from [%s] into the existing %d' % 
-                     (cmph5_in['/MovieInfo/Name'].shape[0],                      
+        logging.info('Merging %d movies from [%s] into the existing %d' %
+                     (cmph5_in['/MovieInfo/Name'].shape[0],
                       cmph5_in.filename.split('/')[-1],
                       self.cmph5_out['/MovieInfo/Name'].shape[0]))
 
@@ -315,7 +320,7 @@ class CmpH5Merger():
             newidx = reduce(lambda x,y: x|y,newidx)
             oldidx = n.logical_not(newidx)
             self.F_MovieID = [(tin_movieDict[m],tout_movieDict[m]) for m in cache_MIMin[oldidx]]
-        
+
             for dsetName in ['Exp','Name','Run', 'FrameRate']:
                 if dsetName in self.cmph5_out['/MovieInfo'].keys():
                     dout = self.cmph5_out['/MovieInfo'][dsetName]
@@ -336,7 +341,7 @@ class CmpH5Merger():
             self.cmph5_out['/MovieInfo'].attrs.modify('nRow', self.cmph5_out['/MovieInfo/ID'].shape[0])
         else:
             self.F_MovieID = dict([(tin_movieDict[m],tout_movieDict[m]) for m in cache_MIMin])
-        
+
     #################
     # Setup methods #
     #################
@@ -347,7 +352,7 @@ class CmpH5Merger():
         for comparing the rest and making sure they meet the same standards
         """
         badSeed = True
-        while badSeed:            
+        while badSeed:
             self.cmph5_out = h5py.File(os.path.abspath(self._seedFN), 'r')
             self._valDict = self._getValDict(self.cmph5_out, self._forceMerge)
 
@@ -364,11 +369,11 @@ class CmpH5Merger():
                 self.cmph5_out.close()
                 logging.info('Copying seed cmp.h5 from [%s]' % self._seedFN)
                 subprocess.call('cp %s %s' % (os.path.abspath(self._seedFN), self._outfile), shell=True)
-                self.cmph5_out = h5py.File(self._outfile, 'r+')                            
+                self.cmph5_out = h5py.File(self._outfile, 'r+')
 
         # Check if the seed is empty
         if not self._valDict['AlnInfoDSets'] and not len(self._FNs):
-            logging.info('The seed [%s] has no alignments and there are no more files left to merge' % 
+            logging.info('The seed [%s] has no alignments and there are no more files left to merge' %
                          self._seedFN)
 
         else:
@@ -385,12 +390,12 @@ class CmpH5Merger():
             self.refDict = self._getRefDict(self.cmph5_out)
             self.outIDDict = dict(zip(self.cmph5_out['/RefGroup/Path'].value,self.cmph5_out['/RefGroup/ID'].value))
 
-            # Remove consensus 
+            # Remove consensus
             for rgrp in self.cmph5_out['/RefGroup/Path'].value.tolist():
                 if 'Consensus' in self.cmph5_out[rgrp].keys():
                     del self.cmph5_out[rgrp+'/Consensus']
 
-            # Remove sorting 
+            # Remove sorting
             if 'OffsetTable' in self.cmph5_out['/RefGroup'].keys():
                 del self.cmph5_out['/RefGroup/OffsetTable']
 
@@ -401,7 +406,7 @@ class CmpH5Merger():
         each dataset.
         """
         aIdx = self.cmph5_out['/AlnInfo/AlnIndex']
-        
+
         # Fix MovieID and ReadGroupPathID
         dsetMap = {'/MovieInfo/ID':'MovieID','/AlnGroup/ID':'AlnGroupID'}
         for dsetName in dsetMap:
@@ -414,8 +419,8 @@ class CmpH5Merger():
                     self.cmph5_out[dsetName][i] = i+1
 
             if idFIX and toFix:
-                aIdx[:,self._IDX[dsetMap[dsetName]]] = n.array([idFIX[x] for x in 
-                                                                aIdx[:,self._IDX[dsetMap[dsetName]]]], 
+                aIdx[:,self._IDX[dsetMap[dsetName]]] = n.array([idFIX[x] for x in
+                                                                aIdx[:,self._IDX[dsetMap[dsetName]]]],
                                                                dtype='uint32')
     def _getValDict(self, cmph5, ignorePM=False):
         """
@@ -425,17 +430,17 @@ class CmpH5Merger():
         if cmph5['/AlnInfo/AlnIndex'].shape[0] == 0:
             return {'AlnInfoDSets':'','PulseMetrics':''}
         valDict = {}
-        
+
         if not ignorePM:
             valDict['PulseMetrics'] = []
-            a = [sorted(cmph5[grp].keys()) for grp 
+            a = [sorted(cmph5[grp].keys()) for grp
                  in cmph5['/AlnGroup/Path'].value.tolist() if 'AlnArray' in cmph5[grp].keys()]
             valDict['PulseMetrics'] = a[0]
             if filter(lambda x: x != a[0], a):
                 return {'AlnInfoDSets':'','PulseMetrics':''}
 
         valDict['AlnInfoDSets'] = sorted(cmph5['/AlnInfo'].keys())
-        
+
         return valDict
 
     ##################
@@ -463,8 +468,8 @@ class CmpH5Merger():
 
     def _getRefDict(self,cmph5):
         """
-        Encapsulate all data from /RefGroup/ into a dictionary. 
-        Notes: Caching into lists necessary for speed and to avoid 
+        Encapsulate all data from /RefGroup/ into a dictionary.
+        Notes: Caching into lists necessary for speed and to avoid
         having numpy.object_ isntances instead of strings.
         """
         rInfo = dict(zip(cmph5['/RefInfo/ID'].value.tolist(),
@@ -490,10 +495,10 @@ class CmpH5Merger():
         else:
             newShape = (dout.shape[0] + newVLen, dout.shape[1])
             dout.resize(newShape)
-            dout[oldVlen:(oldVlen + newVLen),:] = newVal                
+            dout[oldVlen:(oldVlen + newVLen),:] = newVal
 
         if 'lastRow' in dout.attrs.keys():
             dout.attrs.modify('lastRow', oldVlen+newVLen)
-       
+
 
 
