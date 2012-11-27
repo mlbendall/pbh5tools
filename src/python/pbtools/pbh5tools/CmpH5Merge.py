@@ -77,6 +77,9 @@ class CmpH5Merger():
                 msg = '[%s] is not valid for merging!' % cmph5_in.filename
                 logging.error( msg )
                 raise Exception( msg )
+        #CmpH5Merger may fail to merge AlnGroup/Paths with the same
+        #AlnGroup/Path to one AlnGroup/Path. Fix it.
+        self.mergeAlnGroupPath()
 
         # Reset sorting
         if self.cmph5_out['/AlnInfo/AlnIndex'].shape[0] != 0 and 'Index' in self.cmph5_out.attrs:
@@ -102,6 +105,35 @@ class CmpH5Merger():
     #################
     # Merge methods #
     #################
+    def mergeAlnGroupPath(self):
+        """
+        Merge CmpH5Merger's /AlnGroup/Path.
+        """
+        logging.info("Merging AlnGroup/Path")
+        idPath     = zip(self.cmph5_out['/AlnGroup/ID'][()], \
+                    self.cmph5_out['/AlnGroup/Path'][()])
+        if (len(idPath) == 0):
+            return
+
+        newIds     = list()
+        newPaths   = list()
+        newIdPath  = list()
+        oldIdNewId = dict()
+        for i, path in idPath:
+            if not path in newPaths:
+                newPaths.append(path)
+                newIds.append(len(newPaths))
+            oldIdNewId[i] = len(newPaths)
+
+        newShape  = (len(newPaths), )
+        self.cmph5_out['AlnGroup/ID'].resize(newShape)
+        self.cmph5_out['AlnGroup/ID'][()] = n.array(newIds)
+        self.cmph5_out['AlnGroup/Path'].resize(newShape)
+        self.cmph5_out['AlnGroup/Path'][()] = n.array(newPaths)
+
+        for i in range(0, len(self.cmph5_out['/AlnInfo/AlnIndex'])):
+            gID = self.cmph5_out['/AlnInfo/AlnIndex'][(i, self._IDX['AlnGroupID'])]
+            self.cmph5_out['/AlnInfo/AlnIndex'][(i,self._IDX['AlnGroupID'])] = oldIdNewId[gID]
 
     def extendAlnInfo(self, cmph5_in):
         """
