@@ -39,10 +39,15 @@ import re
 from pbcore.io.cmph5 import factory
 
 class CmpH5Compare():
-
     def __init__(self, cmph5_1, cmph5_2):
         self.c1 = factory.create(cmph5_1,'r')
         self.c2 = factory.create(cmph5_2,'r')
+
+    def run(self):
+        if self.compare():
+            print('Files contain equivalent content!')
+        else:
+            print('Files contain NON-equivalent content!')
 
     def compare(self):
         c1 = self.c1
@@ -74,7 +79,8 @@ class CmpH5Compare():
 
         # COMPARE: movie content
         logging.info('Comparing MovieInfo content')
-        movieCompare = [str(x[0]) == str(x[1]) for x in zip(n.sort(c1['/MovieInfo/Name']._dataset),n.sort(c2['/MovieInfo/Name']._dataset))]
+        movieCompare = [str(x[0]) == str(x[1]) for x in zip(n.sort(c1['/MovieInfo/Name']._dataset),
+                                                            n.sort(c2['/MovieInfo/Name']._dataset))]
         if False in movieCompare:
             return False
         elif c1['/AlnGroup/Path']._dataset.shape[0] != c2['/AlnGroup/Path']._dataset.shape[0]:
@@ -94,14 +100,10 @@ class CmpH5Compare():
 
         # COMPARE: ALL alignments
         logging.info('Comparing ALL alignments and PulseMetrics')
-        # r1 = rfn.rename_fields(self.getRecArray(c1.h5File, '/RefGroup', skiplist=['OffsetTable','SortedRefIndexTable']),{'ID':'RefGroupID'})
-        # r2 = rfn.rename_fields(self.getRecArray(c1.h5File, '/RefInfo'),{'ID':'RefInfoID'})
         r1 = rfn.rename_fields(c1['/RefGroup'].asRecArray(), {'ID':'RefGroupID'})
         r2 = rfn.rename_fields(c1['/RefInfo'].asRecArray(),{'ID':'RefInfoID'})
         refMAP1 = rfn.join_by(key='RefInfoID', r1=r1, r2=r2).data
 
-        # r1 = rfn.rename_fields(self.getRecArray(c2.h5File, '/RefGroup', skiplist=['OffsetTable','SortedRefIndexTable']),{'ID':'RefGroupID'})
-        # r2 = rfn.rename_fields(self.getRecArray(c2.h5File, '/RefInfo'),{'ID':'RefInfoID'})
         r1 = rfn.rename_fields(c2['/RefGroup'].asRecArray(), {'ID':'RefGroupID'})
         r2 = rfn.rename_fields(c2['/RefInfo'].asRecArray(),{'ID':'RefInfoID'})
         refMAP2 = rfn.join_by(key='RefInfoID', r1=r1, r2=r2).data
@@ -126,25 +128,30 @@ class CmpH5Compare():
                     aa1 = c1.h5File[refPath1][alngrp1[i]]['AlnArray'][:]
                     aa2 = c2.h5File[refPath2][alngrp2[i]]['AlnArray'][:]
 
-                    alngrpid1 = c1['/AlnGroup'].asRecArray()[c1['/AlnGroup'].asRecArray()['Path'] == refPath1+'/'+alngrp1[i]]['ID'][0]
-                    alngrpid2 = c2['/AlnGroup'].asRecArray()[c2['/AlnGroup'].asRecArray()['Path'] == refPath2+'/'+alngrp2[i]]['ID'][0]
+                    alngrpid1 = (c1['/AlnGroup'].asRecArray()[c1['/AlnGroup'].asRecArray()['Path'] == 
+                                                              refPath1+'/'+alngrp1[i]]['ID'][0])
+                    alngrpid2 = (c2['/AlnGroup'].asRecArray()[c2['/AlnGroup'].asRecArray()['Path'] == 
+                                                             refPath2+'/'+alngrp2[i]]['ID'][0])
                     t_sl1 = n.sort(sl1[sl1['AlnGroupID'] == alngrpid1], order=['HoleNumber','rStart'])
                     t_sl2 = n.sort(sl2[sl2['AlnGroupID'] == alngrpid2], order=['HoleNumber','rStart'])
                     
                     for i,row in enumerate(t_sl1):
                         if row['tStart'] == t_sl2[i]['tStart'] and row['tEnd'] == t_sl2[i]['tEnd']:
-                            cmpraa = len(n.nonzero(aa1[row['Offset_begin']:row['Offset_end']] - aa2[t_sl2[i]['Offset_begin']:t_sl2[i]['Offset_end']])[0])
+                            cmpraa = len(n.nonzero(aa1[row['Offset_begin']:row['Offset_end']] - 
+                                                   aa2[t_sl2[i]['Offset_begin']:t_sl2[i]['Offset_end']])[0])
                             if cmpraa:
                                 logging.error('DIFF: aligned query and aligned target equality')                            
                                 return False
                         else:
                             noMatchCntr += 1
 
-        logging.info('INF: %s%% reads from %s do not match with %s' % (noMatchCntr/float(c1.numAlnHits), c1.h5File.filename, c2.h5File.filename))
+        logging.info('INF: %s%% reads from %s do not match with %s' % (noMatchCntr/float(c1.numAlnHits), 
+                                                                       c1.h5File.filename, c2.h5File.filename))
         return True
     
     def getRecArray(self, cmph5, dsetName, skiplist=[]):
-        isize = cmph5[dsetName].attrs['nRow'] if 'nRow' in cmph5[dsetName].attrs else cmph5[dsetName][cmph5[dsetName].keys[0]].shape[0]
+        isize = (cmph5[dsetName].attrs['nRow'] if 
+                 'nRow' in cmph5[dsetName].attrs else cmph5[dsetName][cmph5[dsetName].keys[0]].shape[0])
         clMAP = {n.object_:n.dtype('S100',1), n.uint32:n.uint32}
         columns = [(k,clMAP[cmph5[dsetName][k].dtype.type]) for k in cmph5[dsetName] if k not in skiplist]
         results = n.recarray((isize,),dtype=columns)
@@ -152,13 +159,3 @@ class CmpH5Compare():
             if k not in skiplist:
                 results[k] = cmph5[dsetName][k].value
         return results
-
-if __name__ == '__main__':
-    sys.exit(toolRunner().run())    
-    # c1FN = '/home/UNIXHOME/diliopoulos/Work/compareTest/1.cmp.h5'
-    # c2FN = '/home/UNIXHOME/diliopoulos/Work/compareTest/2.cmp.h5'
-    # print CmpH5Compare(c1FN,c2FN).compare()
-    # from IPython.Shell import IPShellEmbed; IPShellEmbed(argv=[])()
-
-                     
-

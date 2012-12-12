@@ -66,12 +66,13 @@ class CmpH5Splitter():
         self._seedFN = os.path.abspath(filename)
         self._outDir = os.getcwd() if not outDir else outDir
         self.cmph5_in = File(self._seedFN, 'r')
-        self.refgrpDict = dict(zip(self.cmph5_in['/RefGroup/Path'],zip(self.cmph5_in['/RefGroup/ID'],self.cmph5_in['/RefGroup/RefInfoID'])))
+        self.refgrpDict = dict(zip(self.cmph5_in['/RefGroup/Path'],
+                                   zip(self.cmph5_in['/RefGroup/ID'],
+                                       self.cmph5_in['/RefGroup/RefInfoID'])))
         self.refinfoDict = dict(zip(self.cmph5_in['/RefInfo/ID'], self.cmph5_in['/RefInfo/FullName']))
         self.aIdx = self.cmph5_in['/AlnInfo/AlnIndex'].value
         
         self._IDX = {'AlnGroupID': 1, 'MovieID': 2, 'RefGroupID': 3}
-        # self._IDX = CmpH5Factory.factory.create(self._seedFN,'r')._colName2Index
         
     def run(self):
         logging.info('Splitting [%s] into %d files...' % (os.path.basename(self._seedFN),len(self.refgrpDict)))
@@ -140,5 +141,4 @@ class CmpH5Splitter():
         dout.resize(newval.shape)
         dout.write_direct(newval)
         if 'lastRow' in dout.attrs.keys():
-            dout.attrs.modify('lastRow', dout.shape[0])    
-
+            dout.attrs.modify('lastRow', dout.shape[0])

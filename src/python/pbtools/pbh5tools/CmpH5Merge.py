@@ -74,9 +74,8 @@ class CmpH5Merger():
                 self.extendAlnGroup(cmph5_in)
                 self.extendAlnInfo(cmph5_in)
             else:
-                msg = '[%s] is not valid for merging!' % cmph5_in.filename
-                logging.error( msg )
-                raise Exception( msg )
+                raise PBH5ToolsException("merge", msg)
+
         #CmpH5Merger may fail to merge AlnGroup/Paths with the same
         #AlnGroup/Path to one AlnGroup/Path. Fix it.
         self.mergeAlnGroupPath()
@@ -184,7 +183,8 @@ class CmpH5Merger():
                     targetDataset[start:newSize] = sourceDataset[:]
                     offsetReset = start ## ugly, same value for all datasets in group.
                 else:
-                    raise Exception("Don't know how to deal with rank > 1 datasets.")
+                    raise PBH5ToolsException("merge", "Don't know how to deal with rank" +
+                                             "> 1 datasets.")
         self.offsetResets[targetGroupName] = offsetReset
 
     def extendAlnGroup(self,cmph5_in):

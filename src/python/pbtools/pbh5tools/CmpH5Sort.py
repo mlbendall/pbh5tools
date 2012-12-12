@@ -38,7 +38,7 @@ import numpy as NP
 
 import pbcore.io.rangeQueries as RQ
 
-__VERSION__ = ".72"
+__VERSION__ = ".73"
 
 class CmpH5Format:
      def __init__(self, cmpH5):
@@ -199,8 +199,8 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
          else:
               error = True
          if error:
-              raise Exception("Datasets must agree:\n" + ",".join(spd) + 
-                              "\nvs\n" + ",".join(uPulseDatasets))
+              raise PBH5ToolsException("sort", "Datasets must agree:\n" + ",".join(spd) +
+                                       "\nvs\n" + ",".join(uPulseDatasets))
     
     readGroupPaths = dict(zip(cH5[format.ALN_GROUP_ID], [ x for x in cH5[format.ALN_GROUP_PATH]]))
     refGroupPaths = dict(zip(cH5[format.REF_GROUP_ID], [ x for x in cH5[format.REF_GROUP_PATH]]))
@@ -377,7 +377,7 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
          shutil.copyfile(inFile, _inFile)
          outFile = _inFile
     else:
-         raise Exception("Improper call, must specify outFile, tmpDir, or inPlace must be True.")
+         raise PBH5ToolsException("sort", "Improper call, must specify outFile, tmpDir, or inPlace must be True.")
     
     logging.info("Processing inFile: %s saving in outFile: %s" % (_inFile, outFile))
 
@@ -491,25 +491,23 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
                 for oA in originalAttrs:
                     cH5[extraTable].attrs.create(oA[0], oA[1])
 
-        ## if you make it this far, set the flag.
+        ## set this flag for before. 
         success = True
 
     except Exception, E:
-        logging.error(E)
-        if (os.path.exists(outFile)):
-            pass
-        
+         logging.error(E)
+
     finally: 
         try:
             cH5.close()
             del cH5
             if success:
+                ## XXX: This whole block we need to refactor.
                 try:
-                    ## XXX: This we want to refactor
                     from pbcore.io.cmph5 import factory
-
                     cmpH5 = factory.create(outFile, 'a')
-                    cmpH5.log('CmpH5Sort.py',  __VERSION__, str(datetime.datetime.now()), ' '.join([_inFile, outFile]), 'Sorting')
+                    cmpH5.log('CmpH5Sort.py',  __VERSION__, str(datetime.datetime.now()), 
+                              ' '.join([_inFile, outFile]), 'Sorting')
                     cmpH5.close()
                 except Exception, E:
                     logging.warn("Unable to add information to cmpH5 FileInfo table.")
@@ -519,10 +517,9 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
                     logging.info("Overwriting input cmpH5 file.")
                     shutil.copyfile(_inFile, inFile)
                     fout.close()
-        except:
-            pass
-        finally:
-            return(success)
+        except Exception as e:
+             raise PBH5ToolsException("sort", str(e))
+
 
     
 

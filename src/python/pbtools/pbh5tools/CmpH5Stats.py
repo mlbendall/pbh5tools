@@ -87,8 +87,6 @@ class BinOp(Expr):
             return self.l(cmpH5, idx) / self.r(cmpH5, idx)
         elif self.op == '*':
             return self.l(cmpH5, idx) * self.r(cmpH5, idx)
-        # elif self.op == '**':
-        #     return [ ':'.join((x,y)) for x,y in self.l(cmpH5, idx), self.r(cmpH5, idx) ]
         else:
             raise Exception("Undefined operation:" + self.op)
 
@@ -131,18 +129,14 @@ class Q(Statistic):
         return np.percentile(x, self.qtile)
 
 class Metric(Expr):
+    def __init__(self):
+        self.r = None
+
     def eval(self, cmpH5, idx):
         return self.produce(cmpH5, idx)
-
-class Factor(Metric):
-    def eval(self, cmpH5, idx): 
-        return self.produce(cmpH5, idx)
-
-    def __mul__(self, other):
-        return BinOp(self, other, '**')
-    def __rmul__(self, other):
-        return BinOp(other, self, "**")
-
+        # if None == self.r:
+        #     self.r = 
+        # return self.r 
 
 class _TemplateSpan(Metric):
     def produce(self, cmpH5, idx):
@@ -172,10 +166,6 @@ class _PulseWidth(Metric):
     def produce(self, cmpH5, idx):
         return [ cmpH5[i].PulseWidth() for i in idx ] 
 
-class _RefSeq(Factor): 
-    def produce(self, cmpH5, idx):
-        return [ cmpH5[i].fullRefName for i in idx ]
-
 ################################################################################
 ##
 ## Define the core metrics, try to define all metrics in terms of some
@@ -191,15 +181,7 @@ IPD                 = _IPD()
 PulseWidth          = _PulseWidth()
 Accuracy            = 1.0 - NErrors/(ReadLength * 1.0)
 PolRate             = TemplateSpan/(ReadFrames/(FrameRate * 1.0))
-
-## how does this work? 
-# PulseWidth | (Base * RefSeq)
-
-
-## 
-## discrete metrics / stratification variables.
-##
-RefSeq              = _RefSeq()
+ReadLength          = ReadLength
 
 
 class CmpH5Stats(object):
@@ -212,8 +194,6 @@ class CmpH5Stats(object):
                            meanPolRate     = Mean(PolRate),
                            meanIPD         = Mean(Flatten(IPD)),
                            medianIPD       = Median(Flatten(IPD)))
-        
-        from IPython.Shell import IPShellEmbed; IPShellEmbed(argv=[])()
         
         ## make a hash where each element contains indices of the
         ## subreads for the strata.
@@ -233,7 +213,7 @@ class CmpH5Stats(object):
         
     
     def emitToCsv(self, dta):
-        
+        from IPython.Shell import IPShellEmbed; IPShellEmbed(argv=[])()
         pass
 
     def run(self):

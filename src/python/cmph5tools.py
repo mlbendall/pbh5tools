@@ -45,8 +45,14 @@ from pbtools.pbh5tools.CmpH5Sort import sortCmpH5
 from pbtools.pbh5tools.CmpH5Trim import CmpH5Sampler, CmpH5Splitter
 from pbtools.pbh5tools.CmpH5Stats import CmpH5Stats
 from pbtools.pbh5tools.CmpH5Summary import CmpH5Summary
+from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 
-__version__ = "0.4.1"
+__p4revision__ = "$Revision$"
+__p4change__ = "$Change$"
+revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
+changeNum = int(__p4change__.strip("$").split(":")[-1])
+__version__ = "%s-r%d-c%d" % ( pkg_resources.require("pbtools.pbh5tools")[0].version, revNum, changeNum )
+
 
 class CmpH5ToolsRunner(PBMultiToolRunner):
     def __init__(self):
@@ -55,7 +61,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         super(CmpH5ToolsRunner, self).__init__('\n'.join(desc))
         subparsers = self.getSubParsers()
 
-        ########
+        #######
         # merge
         desc = ['Merge multiple cmp.h5 files. Supports both \'safe\' merging where only cmp.h5',
                 'files that contain the same H5Datasets compared to the sedding .cmp.file',
@@ -70,9 +76,10 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         parser_m.add_argument('--outFile', dest='outfile', default='out.cmp.h5', 
                               help='output filename [%(default)s]')
         parser_m.add_argument('--forceMerge', dest='forcemerge', action='store_true',
-                              help= 'bypass validation of cmp.h5 files before merging and force merge [%(default)s]')
+                              help = 'bypass validation of cmp.h5 files before merging and' +
+                              'force merge [%(default)s]')
         
-        ########
+        ######
         # sort
         desc = ['Sort cmp.h5 files. If output-file is unspecified the input-file is',
                 'overwritten. If there are a number of reference groups then the',
@@ -87,13 +94,15 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         parser_s.add_argument('--outFile', dest='outfile', 
                                help='output filename')
         parser_s.add_argument('--deep', dest='deepsort', action='store_true',
-                              help='whether a deep sorting should be conducted, i.e. sort the AlignmentArrays [%(default)s]')
+                              help='whether a deep sorting should be conducted, i.e. sort the' + 
+                              'AlignmentArrays [%(default)s]')
         parser_s.add_argument('--tmpDir', dest='tmpdir', default='/tmp',  
                               help='temporary directory to use when sorting in-place [%(default)s]')
-        parser_s.add_argument('--usePythonIndexer', dest='usePythonIndexer', default = False, action='store_true',  
+        parser_s.add_argument('--usePythonIndexer', dest='usePythonIndexer', default = False, 
+                              action = 'store_true',  
                               help='Whether to use native indexing [%(default)s].')
         parser_s.add_argument('--inPlace', dest='inPlace', default = False, action = 'store_true',
-                              help='Whether to make a temporary copy of the original cmp.h5 file before sorting.')
+                              help = 'Whether to make a temporary copy of the original cmp.h5 file before sorting.')
 
         ########
         # split
@@ -111,7 +120,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         parser_t.add_argument('--fullRefName', dest='fullrefname', action='store_true',
                               help='Use full reference name for naming splits [%(default)s]')
 
-        ########
+        #########
         # compare
         desc = ['Compare 2 cmp.h5 files for equivalence.']
         parser_c = subparsers.add_parser('compare',
@@ -121,7 +130,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         parser_c.add_argument('infiles', metavar='input.cmp.h5', nargs=2,
                                help='input filenames')
 
-        ########
+        ###########
         # summarize
         desc = ['Print summary for a cmp.h5 file.']
         parser_z = subparsers.add_parser('summarize',
@@ -131,15 +140,16 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         parser_z.add_argument('infile', metavar='input.cmp.h5',
                                help='input filename')
 
-        ########
+        #######
         # stats
-        desc = ['Print statisics csvs for a cmp.h5 file.']
+        desc = ['Emit statistics from a cmp.h5 file.']
         parser_stats = subparsers.add_parser('stats',
                                              help='print a csv for a cmp.h5 file',
                                              description='\n'.join(desc),
                                              parents=[self.parser])
         parser_stats.add_argument('--groupBy', metavar='groupBy', 
-                                  help='how to group the results, .e.g., movie, reference, subread, molecule', 
+                                  help = 'how to group the results, .e.g., movie, reference,' + 
+                                  'subread, molecule', 
                                   default = None)
         parser_stats.add_argument('infile', metavar='input.cmp.h5',
                                   help='input filename')
@@ -155,36 +165,32 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         elif self.args.subName in ['summarize', 'tocsv', 'trim', 'sort']:
             if not os.path.isfile(self.args.infile):
                 self.parser.error('Input file [%s] does not exist!' % self.args.infile)
-
-    # XXX : These things have different rules about throwing exceptions and returning false
+    
     def run(self):
-        if self.args.subName == 'merge':
-            CmpH5Merger(self.args.infiles, self.args.outfile, forceMerge=self.args.forcemerge).run()
-        elif self.args.subName == 'compare':
-            equiv = CmpH5Compare(self.args.infiles[0], self.args.infiles[1]).compare()
-            if equiv:
-                logging.info('Files contain equivalent content!')
+        try: 
+            if self.args.subName == 'merge':
+                CmpH5Merger(self.args.infiles, self.args.outfile, 
+                            forceMerge = self.args.forcemerge).run()
+            elif self.args.subName == 'sort':
+                sortCmpH5(self.args.infile, self.args.outfile, self.args.tmpdir, 
+                          deep = self.args.deepsort, useNative = not self.args.usePythonIndexer,
+                          inPlace = self.args.inPlace)
+            elif self.args.subName == 'split':
+                CmpH5Splitter(self.args.infile, outDir = self.args.outdir, 
+                              fullRefName = self.args.fullrefname).run()
+            elif self.args.subName == 'summarize':
+                CmpH5Summary(self.args.infile).run()
+            elif self.args.subName == 'stats':
+                CmpH5Stats(self.args.infile, self.args.groupBy).run()
+            elif self.args.subName == 'compare':
+                CmpH5Compare(self.args.infiles[0], self.args.infiles[1]).run()
             else:
-                logging.info('Files contain NON-equivalent content!')
-        elif self.args.subName == 'sort':
-            success = sortCmpH5(self.args.infile, self.args.outfile, self.args.tmpdir, 
-                                deep=self.args.deepsort, useNative = not self.args.usePythonIndexer,
-                                inPlace = self.args.inPlace)
-            if not success:
-                logging.error('Error during sorting. Exiting! Original file %s has not been modified.' % 
-                              self.args.infile)
-                raise Exception("Sorting failed")
-        elif self.args.subName == 'split':
-            CmpH5Splitter(self.args.infile, outDir=self.args.outdir, fullRefName=self.args.fullrefname).run()
-        elif self.args.subName == 'summarize':
-            CmpH5Summary(self.args.infile).run()
-        elif self.args.subName == 'stats':
-            CmpH5Stats(self.args.infile, self.args.groupBy).run()
-        else:
-            raise Exception("Unkown command passed to cmph5tools.py")
+                raise PBH5ToolsException("NA", "Unkown command passed to cmph5tools.py:" + 
+                                         self.args.subName)
+        
+        except PBH5ToolsException as pbe:
+            logging.error(str(pbe))
+            sys.exit(1) 
 
 if __name__ == '__main__':    
     sys.exit(CmpH5ToolsRunner().start())
-
-        
-

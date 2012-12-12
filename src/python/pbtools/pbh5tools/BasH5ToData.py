@@ -55,7 +55,8 @@ class BASH5Data(BasH5):
         for hn in self.getZMWs():
             if self.baseCallsDG.getBaseCallLenForZMW(hn):
                 if self.filters:
-                    if not self.baseCallsDG.getStatusForZMW(hn) and n.all([self._filtDict[k](hn,v) for k,v in self.filters.items()]):                        
+                    if not (self.baseCallsDG.getStatusForZMW(hn) and 
+                            n.all([self._filtDict[k](hn,v) for k,v in self.filters.items()])):                        
                         yield (hn, self.baseCallsDG.getBaseCallForZMW(hn))
                 else:
                     yield (hn, self.baseCallsDG.getBaseCallForZMW(hn))
