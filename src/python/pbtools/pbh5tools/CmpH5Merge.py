@@ -35,6 +35,7 @@ import h5py
 import re
 import datetime
 
+from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 from pbcore.io.cmph5 import factory
 
 # NOTES:
@@ -60,6 +61,22 @@ class CmpH5Merger():
         """
         Merge cmp.h5 files in _FNs onto seeding cmp.h5 file _seedFN
         """
+        #Check compatibility before merge
+        if not self._forceMerge:
+            for fin in self._FNs:
+                cmph5_in = h5py.File(fin, 'r')
+                if cmph5_in['/AlnInfo/AlnIndex'].shape[0] == 0:
+                    #If there is no entry in /AlnInfo/AlnIndex,
+                    #ignore this empty cmph5 file
+                    continue
+
+                if self._validateCmpH5(cmph5_in, self._forceMerge):
+                    cmph5_in.close()
+                else:
+                    cmph5_in.close()
+                    msg = "The format of file {0} is incompatible for merge.".format(fin)
+                    raise PBH5ToolsException("merge", msg)
+
         for fin in self._FNs:
             cmph5_in = h5py.File(fin,'r')
 
@@ -74,6 +91,7 @@ class CmpH5Merger():
                 self.extendAlnGroup(cmph5_in)
                 self.extendAlnInfo(cmph5_in)
             else:
+                msg = "The format of file {0} is incompatible for merge.".format(fin)
                 raise PBH5ToolsException("merge", msg)
 
         #CmpH5Merger may fail to merge AlnGroup/Paths with the same
@@ -109,10 +127,12 @@ class CmpH5Merger():
         Merge CmpH5Merger's /AlnGroup/Path.
         """
         logging.info("Merging AlnGroup/Path")
+        if (self.cmph5_out['/AlnGroup/ID'].shape[0] == 0 or \
+            self.cmph5_out['/AlnGroup/Path'].shape[0] == 0):
+            return
+
         idPath     = zip(self.cmph5_out['/AlnGroup/ID'][()], \
                     self.cmph5_out['/AlnGroup/Path'][()])
-        if (len(idPath) == 0):
-            return
 
         newIds     = list()
         newPaths   = list()

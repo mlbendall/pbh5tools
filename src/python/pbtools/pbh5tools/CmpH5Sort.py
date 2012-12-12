@@ -3,27 +3,27 @@
 #
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without 
+# Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# * Redistributions of source code must retain the above copyright notice, this 
+# * Redistributions of source code must retain the above copyright notice, this
 #   list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above copyright notice, 
-#   this list of conditions and the following disclaimer in the documentation 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
-# * Neither the name of Pacific Biosciences nor the names of its contributors 
-#   may be used to endorse or promote products derived from this software 
+# * Neither the name of Pacific Biosciences nor the names of its contributors
+#   may be used to endorse or promote products derived from this software
 #   without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS CONTRIBUTORS 
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
-# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR ITS 
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+#
+# THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR ITS
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 # PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 # ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #################################################################################$$
 import os
@@ -36,6 +36,7 @@ import tempfile
 import h5py as H5
 import numpy as NP
 
+from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 import pbcore.io.rangeQueries as RQ
 
 __VERSION__ = ".73"
@@ -44,7 +45,7 @@ class CmpH5Format:
      def __init__(self, cmpH5):
         if ('Version' in cmpH5.attrs):
             self.VERSION = cmpH5.attrs['Version']
-        
+
         self.ALN_INFO             = 'AlnInfo'
         self.REF_INFO             = 'RefInfo'
         self.MOVIE_INFO           = 'MovieInfo'
@@ -60,14 +61,14 @@ class CmpH5Format:
         self.ALN_GROUP_ID         = '/'.join([self.ALN_GROUP, 'ID'])
         self.ALN_GROUP_PATH       = '/'.join([self.ALN_GROUP, 'Path'])
 
-        (self.ID, self.ALN_ID, self.MOVIE_ID, self.REF_ID, self.TARGET_START, 
-         self.TARGET_END, self.RC_REF_STRAND, self.HOLE_NUMBER, self.SET_NUMBER, 
-         self.STROBE_NUMBER, self.MOLECULE_ID, self.READ_START, self.READ_END, 
-         self.MAP_QV, self.N_MATCHES, self.N_MISMATCHES, self.N_INSERTIONS, 
-         self.N_DELETIONS, self.OFFSET_BEGIN, self.OFFSET_END, self.N_BACK, 
+        (self.ID, self.ALN_ID, self.MOVIE_ID, self.REF_ID, self.TARGET_START,
+         self.TARGET_END, self.RC_REF_STRAND, self.HOLE_NUMBER, self.SET_NUMBER,
+         self.STROBE_NUMBER, self.MOLECULE_ID, self.READ_START, self.READ_END,
+         self.MAP_QV, self.N_MATCHES, self.N_MISMATCHES, self.N_INSERTIONS,
+         self.N_DELETIONS, self.OFFSET_BEGIN, self.OFFSET_END, self.N_BACK,
          self.N_OVERLAP) = range(0, 22)
 
-        self.extraTables = [ '/'.join([self.ALN_INFO, x]) for x in cmpH5[self.ALN_INFO].keys() 
+        self.extraTables = [ '/'.join([self.ALN_INFO, x]) for x in cmpH5[self.ALN_INFO].keys()
                              if not x == self.ALN_INDEX_NAME]
 
 
@@ -80,7 +81,7 @@ def numberWithinRange(s, e, vec):
     lI = RQ.leftmostBinSearch(vec, s)
     rI = RQ.rightmostBinSearch(vec, e)
     return(len(filter(lambda x : s <= x < e, vec[lI:rI])))
-    
+
 
 def computeIndices(tStart, tEnd):
     """
@@ -134,7 +135,7 @@ def computeIndicesDP(tStart, tEnd):
         nEnding = numberWithinRange(tStart[i - 1], tStart[i], sortedEnds - 1)
 
         if (nEnding == 0):
-            res[i, 0] = res[i - 1, 0] + 1            
+            res[i, 0] = res[i - 1, 0] + 1
             res[i, 1] = res[i - 1, 1] + 1
         else:
             res[i, 1] = res[i - 1, 1] - nEnding + 1
@@ -201,14 +202,14 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
          if error:
               raise PBH5ToolsException("sort", "Datasets must agree:\n" + ",".join(spd) +
                                        "\nvs\n" + ",".join(uPulseDatasets))
-    
+
     readGroupPaths = dict(zip(cH5[format.ALN_GROUP_ID], [ x for x in cH5[format.ALN_GROUP_PATH]]))
     refGroupPaths = dict(zip(cH5[format.REF_GROUP_ID], [ x for x in cH5[format.REF_GROUP_PATH]]))
     uPDAndType = dict(zip(uPulseDatasets, [ cH5[readGroupPaths.values()[0]][z].dtype for z in uPulseDatasets ]))
 
     ## XXX : this needs to be augmented with some saftey on not loading too much data.
-    ##       - set a bound on the number of elts in the cache. 
-    pdsCache = {} 
+    ##       - set a bound on the number of elts in the cache.
+    pdsCache = {}
 
     def getData(read, ds, start, end):
         key = "/".join((readGroupPaths[read[format.ALN_ID]], ds))
@@ -240,11 +241,11 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
     sAI = cH5[format.ALN_INDEX]
     orderedRefPaths = [""] * offsets.shape[0]
     maxDataSize = int(maxDatasetSize)
-    
+
     ## These are updated in the main loop.
     currentAlnID = 1
     refGroupAlnGroups = []
-    
+
     for row in xrange(0, offsets.shape[0]):
         logging.info("Processing reference: %d of %d" % (row + 1, offsets.shape[0]))
 
@@ -252,13 +253,13 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
         fRow = offsets[row, 1]
         lRow = offsets[row, 2]
         if (lRow == fRow):
-            continue 
+            continue
 
         reads = sAI[fRow:lRow,:]
         alens = reads[:,format.OFFSET_END] - reads[:,format.OFFSET_BEGIN]
         clens = NP.concatenate((NP.array([0], "uint64"), NP.cumsum(alens + 1)))
         tSize = clens[len(clens) - 1]
-        
+
         readBlocks = []
         if tSize >= maxDatasetSize:
              lastStart  = 0
@@ -274,14 +275,14 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
         # choose all the names at once for a particular reference. It
         # is important to ensure that sorting the same file again and
         # again works.
-        newGroupNames = chooseAlnGroupNames(groupID, readBlocks) 
+        newGroupNames = chooseAlnGroupNames(groupID, readBlocks)
 
         for i,readBlock in enumerate(readBlocks):
              logging.debug("Processing readBlock (%d, %d)" % readBlock)
              dsLength = clens[readBlock[1]] - clens[readBlock[0]]
              newGroup = getRefGroup(groupID).create_group(newGroupNames[i])
-             
-             for pulseDataset in uPulseDatasets: 
+
+             for pulseDataset in uPulseDatasets:
                   logging.debug("Processing dataset: %s" % pulseDataset)
                   newDS = NP.zeros(dsLength, dtype = uPDAndType[pulseDataset])
 
@@ -289,18 +290,18 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
                   for readIdx in xrange(readBlock[0], readBlock[1]):
                        read = reads[readIdx, ]
                        gStart, gEnd = currentStart, currentStart + alens[readIdx]
-                       newDS[gStart:gEnd] = getData(read, pulseDataset, 
-                                                    read[format.OFFSET_BEGIN], 
+                       newDS[gStart:gEnd] = getData(read, pulseDataset,
+                                                    read[format.OFFSET_BEGIN],
                                                     read[format.OFFSET_END])
                        currentStart = gEnd + 1
 
                   ## XXX : the tuples are necessary.
-                  newGroup.create_dataset(pulseDataset, data = newDS, 
-                                          dtype = uPDAndType[pulseDataset], 
+                  newGroup.create_dataset(pulseDataset, data = newDS,
+                                          dtype = uPDAndType[pulseDataset],
                                           maxshape = (None, ), chunks = (16384,))
                   logging.debug("flushing:" + ",".join(pdsCache.keys()))
                   pdsCache = {}
-                  
+
 
 
              ## once you have moved all data for a readBlock you can change
@@ -316,10 +317,10 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
 
              ## now write it back; have to map back into the global coord system.
              sAI[(fRow + readBlock[0]):(fRow + readBlock[1]),] = reads[readBlock[0]:readBlock[1],]
-        
+
              ## increment the currentAlnID
              currentAlnID = currentAlnID + 1
-        
+
         ## add the new group names to the list.
         for ngn in newGroupNames:
              refGroupAlnGroups.append("/".join((refGroupPaths[groupID], ngn)))
@@ -336,7 +337,7 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
     cH5.create_dataset(format.ALN_GROUP_ID, data = range(1, currentAlnID),
                        dtype = "int32", maxshape = (None,), chunks = (256,))
     logging.info("Wrote new AlnGroupPath values.")
-    
+
     for rg in readGroupPaths.values():
          ## this should never be false, however, MC has produced
          ## files in the past where there are duplicate paths with
@@ -345,12 +346,12 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
          if rg in cH5:
               del(cH5[rg])
          else:
-              logging.warn("Input cmp.h5 file is out of spec, duplicate " + 
+              logging.warn("Input cmp.h5 file is out of spec, duplicate " +
                            "alignment group paths with different IDs (sorting is unaffected)")
-   
+
 
 def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = False):
-    """ 
+    """
     This routine takes a cmp.h5 file and sorts the AlignmentIndex
     table adding two additional columns for fast access. In addition,
     a new top-level attribute is added to the indicate that the file
@@ -362,7 +363,7 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
                    # something over after success.
 
     if outFile:
-         # process the copied version, original should always be fine. 
+         # process the copied version, original should always be fine.
          shutil.copyfile(inFile, outFile)
          _inFile = outFile
     elif inPlace:
@@ -378,7 +379,7 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
          outFile = _inFile
     else:
          raise PBH5ToolsException("sort", "Improper call, must specify outFile, tmpDir, or inPlace must be True.")
-    
+
     logging.info("Processing inFile: %s saving in outFile: %s" % (_inFile, outFile))
 
 
@@ -409,14 +410,14 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
         if (aI.shape[0] == 0):
             logging.debug("Warning: %s empty!" % _inFile)
             success = True;
-            return True; 
-        
+            return True;
+
         # sort the AlignmentIndex
-        aord = NP.lexsort([aI[:,format.TARGET_END], aI[:,format.TARGET_START], 
+        aord = NP.lexsort([aI[:,format.TARGET_END], aI[:,format.TARGET_START],
                            aI[:,format.REF_ID]])
 
         assert(len(aord) == aI.shape[0])
-        
+
         sAI = aI.value[aord,:]
         del(aI)
         logging.info("Sorted AlignmentIndex.")
@@ -425,18 +426,18 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
         refSeqIDs = cH5[format.REF_GROUP_ID]
         offsets = computeRefIndexTable(refSeqIDs.value, sAI[:,format.REF_ID])
         logging.info("Constructed offset datastructure.")
-        
+
         # check that the offset data structure and the index are consistent.
-        assert(all([all(offsets[i,0] == sAI[offsets[i,1]:offsets[i,2],format.REF_ID]) 
+        assert(all([all(offsets[i,0] == sAI[offsets[i,1]:offsets[i,2],format.REF_ID])
                     for i in range(0, offsets.shape[0])]))
-        
+
         # fill overlap and back columns.
         for row in range(0, offsets.shape[0]):
             fRow = int(offsets[row, 1])
             lRow = int(offsets[row, 2])
             if (lRow - fRow <= 0):
                 continue
-            sAI[fRow:lRow, (format.N_BACK, format.N_OVERLAP)] = computeIndices(sAI[fRow:lRow, format.TARGET_START], 
+            sAI[fRow:lRow, (format.N_BACK, format.N_OVERLAP)] = computeIndices(sAI[fRow:lRow, format.TARGET_START],
                                                                                sAI[fRow:lRow, format.TARGET_END])
 
         logging.info("Constructed indices.")
@@ -446,14 +447,14 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
         del(cH5[format.ALN_INDEX])
         cH5.create_dataset(format.ALN_INDEX, data = sAI, dtype = H5.h5t.NATIVE_UINT32,
                            maxshape = (None, None))
-        
+
         ## If the file is already sorted there's no harm in resorting.
         if (__pathExists(cH5, format.REF_OFFSET_TABLE)):
             logging.info(format.REF_OFFSET_TABLE + " already exists, deleting.")
             del(cH5[format.REF_OFFSET_TABLE])
 
         ## create the offset datastructure in the file.
-        cH5.create_dataset(format.REF_OFFSET_TABLE, data = offsets, 
+        cH5.create_dataset(format.REF_OFFSET_TABLE, data = offsets,
                            dtype = H5.h5t.NATIVE_UINT32, maxshape = (None, None))
 
         ## add the index attribute.
@@ -467,10 +468,10 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
         if (deep):
             logging.info("Repacking alignment arrays.")
             __repackDataArrays(cH5, format)
-            
+
         ## memory free.
         del sAI
-        
+
         ## manage any extra datasets.
         for extraTable in format.extraTables:
             if (__pathExists(cH5, extraTable)):
@@ -486,18 +487,18 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
                 originalAttrs = cH5[extraTable].attrs.items()
 
                 del(cH5[extraTable])
-                cH5.create_dataset(extraTable, data = eTable, 
+                cH5.create_dataset(extraTable, data = eTable,
                                    maxshape = tuple([None for x in eTable.shape]))
                 for oA in originalAttrs:
                     cH5[extraTable].attrs.create(oA[0], oA[1])
 
-        ## set this flag for before. 
+        ## set this flag for before.
         success = True
 
     except Exception, E:
          logging.error(E)
 
-    finally: 
+    finally:
         try:
             cH5.close()
             del cH5
@@ -506,13 +507,13 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
                 try:
                     from pbcore.io.cmph5 import factory
                     cmpH5 = factory.create(outFile, 'a')
-                    cmpH5.log('CmpH5Sort.py',  __VERSION__, str(datetime.datetime.now()), 
+                    cmpH5.log('CmpH5Sort.py',  __VERSION__, str(datetime.datetime.now()),
                               ' '.join([_inFile, outFile]), 'Sorting')
                     cmpH5.close()
                 except Exception, E:
                     logging.warn("Unable to add information to cmpH5 FileInfo table.")
                     logging.warn(E)
-                
+
                 if fout:
                     logging.info("Overwriting input cmpH5 file.")
                     shutil.copyfile(_inFile, inFile)
@@ -521,5 +522,5 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
              raise PBH5ToolsException("sort", str(e))
 
 
-    
+
 
