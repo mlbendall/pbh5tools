@@ -33,4 +33,4 @@ class PBH5ToolsException(Exception):
         self.msg     = msg
         
     def __str__(self):
-        "command: " + self.command + " produced the following error: " + self.msg
+        return "command: " + self.command + " produced the following error: " + self.msg
