@@ -38,16 +38,20 @@ import datetime
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 from pbcore.io.cmph5 import factory
 
-# NOTES:
-# (1) Consensus is not getting coppied over
-
-__VERSION__ = '.1'
+## 
+## This tool doesn't handle a number of cases gracefully. Indeed,
+## about the only thing it works on is merging two or more distinct
+## movies aligned to the same reference. Support has been added to
+## deal with deep sorted files as well as cmp.h5 files with different
+## pulse information.
+##
+__VERSION__ = '.2'
 
 class CmpH5Merger():
     """
-    Class for merging cmp.h5 of similar specs into one file with or without
-    preserving Pulse Feature information. Sorting is NOT preserved, should be
-    faster to merge then sort than merge-sort.
+    Class for merging cmp.h5 of similar specs into one file with or
+    without preserving Pulse Feature information. Sorting, Consensus,
+    Barcode, etc., are not preserved.
     """
     def __init__(self, filenames, outfile, forceMerge=False):
         self._outfile = outfile
@@ -57,25 +61,31 @@ class CmpH5Merger():
         self._setup()
         self.offsetResets = {} ## XXX: deep-sorting
 
+
     def run(self):
         """
         Merge cmp.h5 files in _FNs onto seeding cmp.h5 file _seedFN
         """
-        #Check compatibility before merge
-        if not self._forceMerge:
-            for fin in self._FNs:
-                cmph5_in = h5py.File(fin, 'r')
-                if cmph5_in['/AlnInfo/AlnIndex'].shape[0] == 0:
-                    #If there is no entry in /AlnInfo/AlnIndex,
-                    #ignore this empty cmph5 file
-                    continue
 
-                if self._validateCmpH5(cmph5_in, self._forceMerge):
-                    cmph5_in.close()
-                else:
-                    cmph5_in.close()
-                    msg = "The format of file {0} is incompatible for merge.".format(fin)
-                    raise PBH5ToolsException("merge", msg)
+        ##
+        ## XXX : why here and below with the validation? 
+        ##
+        
+        #Check compatibility before merge
+        # if not self._forceMerge:
+        #     for fin in self._FNs:
+        #         cmph5_in = h5py.File(fin, 'r')
+        #         if cmph5_in['/AlnInfo/AlnIndex'].shape[0] == 0:
+        #             #If there is no entry in /AlnInfo/AlnIndex,
+        #             #ignore this empty cmph5 file
+        #             continue
+
+        #         if self._validateCmpH5(cmph5_in, self._forceMerge):
+        #             cmph5_in.close()
+        #         else:
+        #             cmph5_in.close()
+        #             msg = "Unable to validate file {0} - incompatible for merge.".format(fin)
+        #             raise PBH5ToolsException("merge", msg)
 
         for fin in self._FNs:
             cmph5_in = h5py.File(fin,'r')
@@ -84,15 +94,15 @@ class CmpH5Merger():
                 #If there is no entry in /AlnInfo/AlnIndex,
                 #ignore this empty cmph5 file
                 continue
-
-            if self._validateCmpH5(cmph5_in, self._forceMerge):
+            else:
+                #            if self._validateCmpH5(cmph5_in, self._forceMerge):
                 self.extendMovieInfo(cmph5_in)
                 self.extendRefGroup(cmph5_in)
                 self.extendAlnGroup(cmph5_in)
                 self.extendAlnInfo(cmph5_in)
-            else:
-                msg = "The format of file {0} is incompatible for merge.".format(fin)
-                raise PBH5ToolsException("merge", msg)
+            # else:
+            #     msg = "Failed merge on file {0}.".format(fin)
+            #     raise PBH5ToolsException("merge", msg)
 
         #CmpH5Merger may fail to merge AlnGroup/Paths with the same
         #AlnGroup/Path to one AlnGroup/Path. Fix it.
@@ -118,6 +128,30 @@ class CmpH5Merger():
                     ' '.join(sys.argv),
                     'Merging')
         t_cmph5.close()
+
+        # XXX 
+        # we'll need to remove these temporarily.
+        # compute the common pulse metrics. JHB
+        def getAndDispose(cmpFile):
+            z = h5py.File(cmpFile,'r')
+            y = self._getValDict(z, False)['PulseMetrics']
+            z.close()
+            return y
+                 
+        tmplist = self._FNs
+        tmplist.append(self._seedFN)
+        allPulseDatasets = [ set(getAndDispose(x)) for x in tmplist]
+        commonPulseDatasets = reduce(set.intersection, allPulseDatasets)
+        
+        # XXX reopen, remove.
+        t_cmph5 = h5py.File(self._outfile, 'a')
+        for path in t_cmph5['/AlnGroup/Path'].value.tolist():
+            for ds in t_cmph5[path].keys():
+                if not ds in commonPulseDatasets:
+                    del t_cmph5[path][ds]
+        t_cmph5.close()
+
+        
 
     #################
     # Merge methods #
@@ -404,6 +438,8 @@ class CmpH5Merger():
         for comparing the rest and making sure they meet the same standards
         """
         badSeed = True
+
+        ## XXX this doesn't seem that safe, e.g., what if they are all empty. 
         while badSeed:
             self.cmph5_out = h5py.File(os.path.abspath(self._seedFN), 'r')
             self._valDict = self._getValDict(self.cmph5_out, self._forceMerge)
@@ -450,6 +486,8 @@ class CmpH5Merger():
             # Remove sorting
             if 'OffsetTable' in self.cmph5_out['/RefGroup'].keys():
                 del self.cmph5_out['/RefGroup/OffsetTable']
+
+         
 
     def _sanitizeSeed(self):
         """
@@ -505,16 +543,19 @@ class CmpH5Merger():
         """
         t_valDict = self._getValDict(cmph5, ignorePM)
         if not t_valDict['AlnInfoDSets']:
-            logging.info('Rejecting [%s] since it has a 0-sized AlnIndex' % cmph5.filename)
+            logging.error('Rejecting [%s] since it has a 0-sized AlnIndex' % cmph5.filename)
         elif sorted(t_valDict['AlnInfoDSets']) != sorted(self._valDict['AlnInfoDSets']):
             t_mdsets = ','.join([d for d in self._valDict['AlnInfoDSets'] if d not in t_valDict['AlnInfoDSets']])
-            logging.info('Rejecting [%s] since it is missing AlnInfo DataSets: %s' % (cmph5.filename, t_mdsets))
-        if not ignorePM:
-            if not t_valDict['PulseMetrics']:
-                logging.info('Rejecting [%s] since AlnGroup datasets are not shared by all AlnGroups' % cmph5.filename)
-            elif sorted(t_valDict['PulseMetrics']) != sorted(self._valDict['PulseMetrics']):
-                t_mdsets = ','.join([d for d in self._valDict['PulseMetrics'] if d not in t_valDict['PulseMetrics']])
-                logging.info('Rejecting [%s] since it is missing AlnGroup DataSets: %s' % (cmph5.filename, t_mdsets))
+            logging.error('Rejecting [%s] since it is missing AlnInfo DataSets: %s' % (cmph5.filename, t_mdsets))
+
+        ## XXX : this check makes it impossible to merge files with
+        ## different pulse datasets present.
+        # if not ignorePM:
+        #     if not t_valDict['PulseMetrics']:
+        #         logging.info('Rejecting [%s] since AlnGroup datasets are not shared by all AlnGroups' % cmph5.filename)
+        #     elif sorted(t_valDict['PulseMetrics']) != sorted(self._valDict['PulseMetrics']):
+        #         t_mdsets = ','.join([d for d in self._valDict['PulseMetrics'] if d not in t_valDict['PulseMetrics']])
+        #         logging.info('Rejecting [%s] since it is missing AlnGroup DataSets: %s' % (cmph5.filename, t_mdsets))
 
         return self._getValDict(cmph5, ignorePM) == self._valDict
 
