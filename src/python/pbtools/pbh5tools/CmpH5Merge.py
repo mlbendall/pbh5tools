@@ -38,7 +38,7 @@ import datetime
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 from pbcore.io.cmph5 import factory
 
-## 
+##
 ## This tool doesn't handle a number of cases gracefully. Indeed,
 ## about the only thing it works on is merging two or more distinct
 ## movies aligned to the same reference. Support has been added to
@@ -68,9 +68,9 @@ class CmpH5Merger():
         """
 
         ##
-        ## XXX : why here and below with the validation? 
+        ## XXX : why here and below with the validation?
         ##
-        
+
         #Check compatibility before merge
         # if not self._forceMerge:
         #     for fin in self._FNs:
@@ -87,6 +87,7 @@ class CmpH5Merger():
         #             msg = "Unable to validate file {0} - incompatible for merge.".format(fin)
         #             raise PBH5ToolsException("merge", msg)
 
+        tmplist = list()
         for fin in self._FNs:
             cmph5_in = h5py.File(fin,'r')
 
@@ -95,6 +96,7 @@ class CmpH5Merger():
                 #ignore this empty cmph5 file
                 continue
             else:
+                tmplist.append(fin)
                 #            if self._validateCmpH5(cmph5_in, self._forceMerge):
                 self.extendMovieInfo(cmph5_in)
                 self.extendRefGroup(cmph5_in)
@@ -129,7 +131,7 @@ class CmpH5Merger():
                     'Merging')
         t_cmph5.close()
 
-        # XXX 
+        # XXX
         # we'll need to remove these temporarily.
         # compute the common pulse metrics. JHB
         def getAndDispose(cmpFile):
@@ -137,12 +139,12 @@ class CmpH5Merger():
             y = self._getValDict(z, False)['PulseMetrics']
             z.close()
             return y
-                 
-        tmplist = self._FNs
+
+        #tmplist = self._FNs
         tmplist.append(self._seedFN)
         allPulseDatasets = [ set(getAndDispose(x)) for x in tmplist]
         commonPulseDatasets = reduce(set.intersection, allPulseDatasets)
-        
+
         # XXX reopen, remove.
         t_cmph5 = h5py.File(self._outfile, 'a')
         for path in t_cmph5['/AlnGroup/Path'].value.tolist():
@@ -151,7 +153,7 @@ class CmpH5Merger():
                     del t_cmph5[path][ds]
         t_cmph5.close()
 
-        
+
 
     #################
     # Merge methods #
@@ -439,7 +441,7 @@ class CmpH5Merger():
         """
         badSeed = True
 
-        ## XXX this doesn't seem that safe, e.g., what if they are all empty. 
+        ## XXX this doesn't seem that safe, e.g., what if they are all empty.
         while badSeed:
             self.cmph5_out = h5py.File(os.path.abspath(self._seedFN), 'r')
             self._valDict = self._getValDict(self.cmph5_out, self._forceMerge)
@@ -487,7 +489,7 @@ class CmpH5Merger():
             if 'OffsetTable' in self.cmph5_out['/RefGroup'].keys():
                 del self.cmph5_out['/RefGroup/OffsetTable']
 
-         
+
 
     def _sanitizeSeed(self):
         """
