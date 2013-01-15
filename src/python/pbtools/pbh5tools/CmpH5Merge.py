@@ -147,10 +147,11 @@ class CmpH5Merger():
 
         # XXX reopen, remove.
         t_cmph5 = h5py.File(self._outfile, 'a')
-        for path in t_cmph5['/AlnGroup/Path'].value.tolist():
-            for ds in t_cmph5[path].keys():
-                if not ds in commonPulseDatasets:
-                    del t_cmph5[path][ds]
+        if t_cmph5['/AlnGroup/Path'].shape[0] != 0:
+            for path in t_cmph5['/AlnGroup/Path'].value.tolist():
+                for ds in t_cmph5[path].keys():
+                    if not ds in commonPulseDatasets:
+                        del t_cmph5[path][ds]
         t_cmph5.close()
 
 
