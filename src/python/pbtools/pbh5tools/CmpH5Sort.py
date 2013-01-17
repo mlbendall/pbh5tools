@@ -475,28 +475,41 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
         ## manage any extra datasets.
         for extraTable in format.extraTables:
             if (__pathExists(cH5, extraTable)):
-                logging.info("Sorting table: %s" % extraTable)
-
-                eTable = cH5[extraTable].value
+                logging.info("Sorting dataset: %s" % extraTable)
+                # need .value for permutation to work.
+                eTable = cH5[extraTable].value 
                 if (len(eTable.shape) == 1):
                     eTable = eTable[aord]
                 else:
                     eTable = eTable[aord,:]
 
-                ## save attributes, if any for re-writing below.
-                originalAttrs = cH5[extraTable].attrs.items()
-
+                # save attributes, if any for re-writing below.
+                originalAttrs = cH5[extraTable].attrs
+                originalDtype = cH5[extraTable].dtype
                 del(cH5[extraTable])
-                cH5.create_dataset(extraTable, data = eTable,
+                cH5.create_dataset(extraTable, data = eTable, dtype = originalDtype,
                                    maxshape = tuple([None for x in eTable.shape]))
-                for oA in originalAttrs:
-                    cH5[extraTable].attrs.create(oA[0], oA[1])
+                logging.info("Sorted dataset: %s" % extraTable)
+                logging.info("Writing attributes")
+                for k in originalAttrs.keys():
+                     # this block is necessary because I need to
+                     # convert the dataset into a string dataset from
+                     # object because an apparent h5py limitation.
+                     if originalAttrs[k].dtype == 'object':
+                          newDtype = H5.special_dtype(vlen = str)
+                     else:
+                          newDtype = originalAttrs[k].dtype
+
+                     cH5[extraTable].attrs.create(k, originalAttrs[k], dtype = newDtype)
+
+                logging.info("Finished processing dataset: %s" % extraTable)
 
         ## set this flag for before.
         success = True
 
     except Exception, E:
          logging.error(E)
+         logging.exception(E)
 
     finally:
         try:
