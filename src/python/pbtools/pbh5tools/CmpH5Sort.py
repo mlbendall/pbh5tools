@@ -37,40 +37,11 @@ import h5py as H5
 import numpy as NP
 
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
+from pbtools.pbh5tools.CmpH5Format import CmpH5Format
+
 import pbcore.io.rangeQueries as RQ
 
 __VERSION__ = ".73"
-
-class CmpH5Format:
-     def __init__(self, cmpH5):
-        if ('Version' in cmpH5.attrs):
-            self.VERSION = cmpH5.attrs['Version']
-
-        self.ALN_INFO             = 'AlnInfo'
-        self.REF_INFO             = 'RefInfo'
-        self.MOVIE_INFO           = 'MovieInfo'
-        self.REF_GROUP            = 'RefGroup'
-        self.ALN_GROUP            = 'AlnGroup'
-        self.ALN_INDEX_NAME       = 'AlnIndex'
-        self.ALN_INDEX            = '/'.join([self.ALN_INFO, self.ALN_INDEX_NAME])
-
-        self.REF_GROUP_ID         = '/'.join([self.REF_GROUP, 'ID'])
-        self.REF_GROUP_PATH       = '/'.join([self.REF_GROUP, 'Path'])
-        self.REF_OFFSET_TABLE     = '/'.join([self.REF_GROUP, 'OffsetTable'])
-
-        self.ALN_GROUP_ID         = '/'.join([self.ALN_GROUP, 'ID'])
-        self.ALN_GROUP_PATH       = '/'.join([self.ALN_GROUP, 'Path'])
-
-        (self.ID, self.ALN_ID, self.MOVIE_ID, self.REF_ID, self.TARGET_START,
-         self.TARGET_END, self.RC_REF_STRAND, self.HOLE_NUMBER, self.SET_NUMBER,
-         self.STROBE_NUMBER, self.MOLECULE_ID, self.READ_START, self.READ_END,
-         self.MAP_QV, self.N_MATCHES, self.N_MISMATCHES, self.N_INSERTIONS,
-         self.N_DELETIONS, self.OFFSET_BEGIN, self.OFFSET_END, self.N_BACK,
-         self.N_OVERLAP) = range(0, 22)
-
-        self.extraTables = [ '/'.join([self.ALN_INFO, x]) for x in cmpH5[self.ALN_INFO].keys()
-                             if not x == self.ALN_INDEX_NAME]
-
 
 def numberWithinRange(s, e, vec):
     """
@@ -203,10 +174,14 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
               raise PBH5ToolsException("sort", "Datasets must agree:\n" + ",".join(spd) +
                                        "\nvs\n" + ",".join(uPulseDatasets))
 
-    readGroupPaths = dict(zip(cH5[format.ALN_GROUP_ID], [ x for x in cH5[format.ALN_GROUP_PATH]]))
-    refGroupPaths = dict(zip(cH5[format.REF_GROUP_ID], [ x for x in cH5[format.REF_GROUP_PATH]]))
-    uPDAndType = dict(zip(uPulseDatasets, [ cH5[readGroupPaths.values()[0]][z].dtype for z in uPulseDatasets ]))
-
+    readGroupPaths = dict(zip(cH5[format.ALN_GROUP_ID], 
+                              [x for x in cH5[format.ALN_GROUP_PATH]]))
+    refGroupPaths  = dict(zip(cH5[format.REF_GROUP_ID], 
+                              [x for x in cH5[format.REF_GROUP_PATH]]))
+    uPDAndType     = dict(zip(uPulseDatasets, 
+                              [cH5[readGroupPaths.values()[0]][z].dtype 
+                               for z in uPulseDatasets]))
+    
     ## XXX : this needs to be augmented with some saftey on not loading too much data.
     ##       - set a bound on the number of elts in the cache.
     pdsCache = {}
@@ -437,8 +412,9 @@ def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = 
             lRow = int(offsets[row, 2])
             if (lRow - fRow <= 0):
                 continue
-            sAI[fRow:lRow, (format.N_BACK, format.N_OVERLAP)] = computeIndices(sAI[fRow:lRow, format.TARGET_START],
-                                                                               sAI[fRow:lRow, format.TARGET_END])
+            sAI[fRow:lRow, (format.N_BACK, format.N_OVERLAP)] = \
+                computeIndices(sAI[fRow:lRow, format.TARGET_START],
+                               sAI[fRow:lRow, format.TARGET_END])
 
         logging.info("Constructed indices.")
 

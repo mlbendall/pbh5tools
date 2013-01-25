@@ -39,6 +39,7 @@ import pkg_resources
 from pbcore.util.ToolRunner import PBMultiToolRunner
 import pbcore.util.RecArray as RA
 
+from pbtools.pbh5tools.CmpH5Select import CmpH5Select
 from pbtools.pbh5tools.CmpH5Merge import CmpH5Merger
 from pbtools.pbh5tools.CmpH5Compare import CmpH5Compare
 from pbtools.pbh5tools.CmpH5Sort import sortCmpH5
@@ -61,6 +62,17 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         super(CmpH5ToolsRunner, self).__init__('\n'.join(desc))
         subparsers = self.getSubParsers()
 
+        ########
+        # select
+        desc = ['Select']
+        parser_m = subparsers.add_parser('select', help = 'select', 
+                                         description = '\n'.join(desc),
+                                         parents = [self.parser])
+        parser_m.add_argument('inCmpH5', metavar='input.cmp.h5')
+        parser_m.add_argument('outCmpH5', metavar='output.cmp.h5')
+        parser_m.add_argument('idxs', metavar='N', type=int, nargs='+',
+                              help='indices to select')
+     
         #######
         # merge
         desc = ['Merge multiple cmp.h5 files. Supports both \'safe\' merging where only cmp.h5',
@@ -184,6 +196,8 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                 CmpH5Stats(self.args.infile, self.args.groupBy).run()
             elif self.args.subName == 'compare':
                 CmpH5Compare(self.args.infiles[0], self.args.infiles[1]).run()
+            elif self.args.subName == 'select':
+                CmpH5Select(self.args.inCmpH5, self.args.outCmpH5, self.args.idxs)
             else:
                 raise PBH5ToolsException("NA", "Unkown command passed to cmph5tools.py:" + 
                                          self.args.subName)
