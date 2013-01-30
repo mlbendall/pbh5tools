@@ -9,8 +9,8 @@ import sys
 setup(
     name = 'pbtools.pbh5tools',
     version='0.1.0',
-    author='pbiDevNet',
-    author_email='pbiDevNet@pacificbiosciences.com',
+    author='Pacific Biosciences',
+    author_email='devnet@pacificbiosciences.com',
     license='LICENSE.txt',
     scripts = ['src/python/bash5tools.py', 
                'src/python/cmph5tools.py'],
