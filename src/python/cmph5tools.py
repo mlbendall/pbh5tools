@@ -41,6 +41,7 @@ import pbcore.util.RecArray as RA
 
 from pbtools.pbh5tools.CmpH5Select import CmpH5Select
 from pbtools.pbh5tools.CmpH5Merge import CmpH5Merger
+from pbtools.pbh5tools.CmpH5Merge2 import cmpH5Merge
 from pbtools.pbh5tools.CmpH5Compare import CmpH5Compare
 from pbtools.pbh5tools.CmpH5Sort import sortCmpH5
 from pbtools.pbh5tools.CmpH5Trim import CmpH5Sampler, CmpH5Splitter
@@ -91,6 +92,17 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                               help = 'bypass validation of cmp.h5 files before merging and' +
                               'force merge [%(default)s]')
         
+        desc = ['xxxxxxx.']
+        parser_m = subparsers.add_parser('merge2',
+                                         help='merge multiple cmp.h5 files',
+                                         description='\n'.join(desc),
+                                         parents=[self.parser])
+        parser_m.add_argument('--outFile', dest='outfile', default='out.cmp.h5', 
+                              help='output filename [%(default)s]')
+        parser_m.add_argument('infiles', metavar='input.cmp.h5', nargs='+',
+                              help='input filenames')
+
+
         ######
         # sort
         desc = ['Sort cmp.h5 files. If output-file is unspecified the input-file is',
@@ -183,6 +195,9 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
             if self.args.subName == 'merge':
                 CmpH5Merger(self.args.infiles, self.args.outfile, 
                             forceMerge = self.args.forcemerge).run()
+            elif self.args.subName == 'merge2':
+                cmpH5Merge(self.args.infiles, self.args.outfile)
+            
             elif self.args.subName == 'sort':
                 sortCmpH5(self.args.infile, self.args.outfile, self.args.tmpdir, 
                           deep = self.args.deepsort, useNative = not self.args.usePythonIndexer,

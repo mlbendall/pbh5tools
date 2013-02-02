@@ -44,10 +44,18 @@ class CmpH5Format:
         self.ALN_INDEX            = '/'.join([self.ALN_INFO, self.ALN_INDEX_NAME])
         self.REF_GROUP_ID         = '/'.join([self.REF_GROUP, 'ID'])
         self.REF_GROUP_PATH       = '/'.join([self.REF_GROUP, 'Path'])
+        self.REF_GROUP_INFO_ID    = '/'.join([self.REF_GROUP, 'RefInfoID'])
+
         self.REF_OFFSET_TABLE     = '/'.join([self.REF_GROUP, 'OffsetTable'])
         self.ALN_GROUP_ID         = '/'.join([self.ALN_GROUP, 'ID'])
         self.ALN_GROUP_PATH       = '/'.join([self.ALN_GROUP, 'Path'])
-        self.MOVIE_INFO_ID        = '/'.join([self.MOVIE_INFO, 'ID'])
+
+        # Movie Info
+        self.MOVIE_INFO_ID         = '/'.join([self.MOVIE_INFO, 'ID'])
+        self.MOVIE_INFO_NAME       = '/'.join([self.MOVIE_INFO, 'Name'])
+        self.MOVIE_INFO_EXP        = '/'.join([self.MOVIE_INFO, 'Exp'])
+        self.MOVIE_INFO_FRAME_RATE = '/'.join([self.MOVIE_INFO, 'FrameRate'])
+        self.MOVIE_INFO_RUN        = '/'.join([self.MOVIE_INFO, 'Run'])
 
         (self.ID, self.ALN_ID, self.MOVIE_ID, self.REF_ID, self.TARGET_START,
          self.TARGET_END, self.RC_REF_STRAND, self.HOLE_NUMBER, self.SET_NUMBER,

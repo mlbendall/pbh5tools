@@ -92,10 +92,12 @@ class CmpH5Merger():
             cmph5_in = h5py.File(fin,'r')
 
             if cmph5_in['/AlnInfo/AlnIndex'].shape[0] == 0:
+                logging.warn("Skipping: %s" % fin)
                 #If there is no entry in /AlnInfo/AlnIndex,
                 #ignore this empty cmph5 file
                 continue
             else:
+                logging.info("Processing: %s" % fin)
                 tmplist.append(fin)
                 #            if self._validateCmpH5(cmph5_in, self._forceMerge):
                 self.extendMovieInfo(cmph5_in)
@@ -120,6 +122,7 @@ class CmpH5Merger():
             del self.cmph5_out['/RefGroup/OffsetTable']
 
         self.cmph5_out.close()
+        logging.info("Closing: file")
 
         # Reset MoleculeID and set Log entry
         t_cmph5 = factory.create(self._outfile,'a')
@@ -154,6 +157,7 @@ class CmpH5Merger():
                         del t_cmph5[path][ds]
         t_cmph5.close()
 
+        logging.debug("closing")
 
 
     #################
@@ -204,9 +208,10 @@ class CmpH5Merger():
             ## XXX: deep-sorting.
             aMap = dict(zip(cmph5_in['AlnGroup/ID'][:], cmph5_in['AlnGroup/Path'][:]))
             for i in xrange(0, aIdx_in.shape[0]):
-                reset = self.offsetResets[aMap[aIdx_in[i, self._IDX['AlnGroupID']]]]
-                aIdx_in[i, self._IDX['Offset_begin']] += reset
-                aIdx_in[i, self._IDX['Offset_end']] += reset
+                if aMap[aIdx_in[i, self._IDX['AlnGroupID']]] in self.offsetResets:
+                    reset = self.offsetResets[aMap[aIdx_in[i, self._IDX['AlnGroupID']]]]
+                    aIdx_in[i, self._IDX['Offset_begin']] += reset
+                    aIdx_in[i, self._IDX['Offset_end']] += reset
 
         aIdx_in[:,self._IDX['AlnID']] = aIdx_in[:,self._IDX['AlnID']] + aIdx.shape[0]
         aIdx_in[:,self._IDX['MovieID']] = n.array([self.F_MovieID[x] for x
@@ -243,6 +248,7 @@ class CmpH5Merger():
                     raise PBH5ToolsException("merge", "Don't know how to deal with rank" +
                                              "> 1 datasets.")
         self.offsetResets[targetGroupName] = offsetReset
+        logging.debug("setting %s" % offsetReset)
 
     def extendAlnGroup(self,cmph5_in):
         """
@@ -490,7 +496,7 @@ class CmpH5Merger():
             if 'OffsetTable' in self.cmph5_out['/RefGroup'].keys():
                 del self.cmph5_out['/RefGroup/OffsetTable']
 
-
+        logging.debug("Finished setup.")
 
     def _sanitizeSeed(self):
         """

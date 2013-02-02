@@ -38,8 +38,8 @@ import numpy as NP
 
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 from pbtools.pbh5tools.CmpH5Format import CmpH5Format
-from pbtools.pbh5tools.CmpH5Sort import sortCmpH5
 
+## XXX : should this even be a class? sortCmpH5 ain't
 class CmpH5Select(object):
     """Take an input cmp.h5 file and a vector of indices into the
     AlnIndex and create a new cmp.h5 file from those alignments."""
