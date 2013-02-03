@@ -76,24 +76,24 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
      
         #######
         # merge
-        desc = ['Merge multiple cmp.h5 files. Supports both \'safe\' merging where only cmp.h5',
-                'files that contain the same H5Datasets compared to the sedding .cmp.file',
-                'will be merged and \'unsafe\' where no such considerations are taken into',
-                'account.']
-        parser_m = subparsers.add_parser('merge',
-                                         help='merge multiple cmp.h5 files',
-                                         description='\n'.join(desc),
-                                         parents=[self.parser])
-        parser_m.add_argument('infiles', metavar='input.cmp.h5', nargs='+',
-                              help='input filenames')
-        parser_m.add_argument('--outFile', dest='outfile', default='out.cmp.h5', 
-                              help='output filename [%(default)s]')
-        parser_m.add_argument('--forceMerge', dest='forcemerge', action='store_true',
-                              help = 'bypass validation of cmp.h5 files before merging and' +
-                              'force merge [%(default)s]')
+        # desc = ['Merge multiple cmp.h5 files. Supports both \'safe\' merging where only cmp.h5',
+        #         'files that contain the same H5Datasets compared to the sedding .cmp.file',
+        #         'will be merged and \'unsafe\' where no such considerations are taken into',
+        #         'account.']
+        # parser_m = subparsers.add_parser('merge',
+        #                                  help='merge multiple cmp.h5 files',
+        #                                  description='\n'.join(desc),
+        #                                  parents=[self.parser])
+        # parser_m.add_argument('infiles', metavar='input.cmp.h5', nargs='+',
+        #                       help='input filenames')
+        # parser_m.add_argument('--outFile', dest='outfile', default='out.cmp.h5', 
+        #                       help='output filename [%(default)s]')
+        # parser_m.add_argument('--forceMerge', dest='forcemerge', action='store_true',
+        #                       help = 'bypass validation of cmp.h5 files before merging and' +
+        #                       'force merge [%(default)s]')
         
         desc = ['xxxxxxx.']
-        parser_m = subparsers.add_parser('merge2',
+        parser_m = subparsers.add_parser('merge',
                                          help='merge multiple cmp.h5 files',
                                          description='\n'.join(desc),
                                          parents=[self.parser])
@@ -192,10 +192,10 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
     
     def run(self):
         try: 
+            # if self.args.subName == 'merge':
+            #     CmpH5Merger(self.args.infiles, self.args.outfile, 
+            #                 forceMerge = self.args.forcemerge).run()
             if self.args.subName == 'merge':
-                CmpH5Merger(self.args.infiles, self.args.outfile, 
-                            forceMerge = self.args.forcemerge).run()
-            elif self.args.subName == 'merge2':
                 cmpH5Merge(self.args.infiles, self.args.outfile)
             
             elif self.args.subName == 'sort':
