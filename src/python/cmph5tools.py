@@ -40,7 +40,7 @@ from pbcore.util.ToolRunner import PBMultiToolRunner
 import pbcore.util.RecArray as RA
 
 from pbtools.pbh5tools.CmpH5Select import CmpH5Select
-from pbtools.pbh5tools.CmpH5Merge import CmpH5Merger
+#from pbtools.pbh5tools.CmpH5Merge import CmpH5Merger
 from pbtools.pbh5tools.CmpH5Merge2 import cmpH5Merge
 from pbtools.pbh5tools.CmpH5Compare import CmpH5Compare
 from pbtools.pbh5tools.CmpH5Sort import sortCmpH5
