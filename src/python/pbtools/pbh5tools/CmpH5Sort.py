@@ -325,7 +325,8 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
                            "alignment group paths with different IDs (sorting is unaffected)")
 
 
-def sortCmpH5(inFile, outFile, tmpDir, deep = True, useNative = True, inPlace = False):
+def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True, 
+              inPlace = False):
     """
     This routine takes a cmp.h5 file and sorts the AlignmentIndex
     table adding two additional columns for fast access. In addition,

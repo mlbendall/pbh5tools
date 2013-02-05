@@ -183,8 +183,7 @@ Accuracy            = 1.0 - NErrors/(ReadLength * 1.0)
 PolRate             = TemplateSpan/(ReadFrames/(FrameRate * 1.0))
 ReadLength          = ReadLength
 
-
-class CmpH5Stats(object):
+def cmpH5Stats(cmpH5Filename, groupBy = None):
     def __init__(self, cmpH5Filename, groupBy = None):
         self.groupBy = groupBy
         self.reader  = CmpH5Reader(cmpH5Filename)

@@ -38,59 +38,28 @@ import numpy as NP
 
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 from pbtools.pbh5tools.CmpH5Format import CmpH5Format
-
-## XXX : should this even be a class? sortCmpH5 ain't
-class CmpH5Select(object):
+from pbtools.pbh5tools.CmpH5Utils import *
+ 
+def cmpH5Select(inCmpFile, outCmpFile, idxs):
     """Take an input cmp.h5 file and a vector of indices into the
     AlnIndex and create a new cmp.h5 file from those alignments."""
-    def __init__(self, inCmpFilename, outCmpFilename, idxs):
-        inCmp  = H5.File(inCmpFilename, 'r')
-        outCmp = H5.File(outCmpFilename, 'w') # fail if it exists. 
-        idxs   = NP.array(idxs)
-
-        logging.debug("processing input: %s to output: %s using idxs: %s" %
-                      (inCmpFilename, outCmpFilename, idxs))
-        try:
-            self.select(inCmp, outCmp, idxs) 
-
-        except Exception, E:
-            logging.error("Caught Exception: %s", str(E))
-            os.remove(outCmpFilename) # remove the busted file
-            raise PBH5ToolsException(E)
-    
-    def copyAttributes(self, inDs, outDs):
-        for k in inDs.attrs.keys():
-            if inDs.attrs[k].dtype == 'object':
-                newDtype = H5.special_dtype(vlen = str)
-            else:
-                newDtype = inDs.attrs[k].dtype
-            outDs.attrs.create(k, inDs.attrs[k], dtype = newDtype)
-
-    def copyDataset(self, absDsName, inCmp, outCmp, selection, fmt):
-        dta = inCmp[absDsName]
-        if len(dta.shape) <= 1:
-            ndta = dta.value[selection]
-        else:
-            ndta = dta.value[selection,:]
-        ## XXX : chunking
-        outDs = outCmp.create_dataset(absDsName, data = ndta, dtype = dta.dtype)
-        self.copyAttributes(dta, outDs)
-      
-
-    def trimDataset(self, groupName, alnIdxID, inCmp, outCmp, fmt, idName = 'ID'):
+    def trimDataset(groupName, alnIdxID, inCmp, outCmp, fmt, idName = 'ID'):
         ids = outCmp[fmt.ALN_INDEX][:,alnIdxID]
         nds = '/'.join([groupName, idName])
         msk = NP.array([x in ids for x in inCmp[nds].value]) # got to be an NP.array
         for dsName in inCmp[groupName].keys():
-            self.copyDataset('/'.join([groupName, dsName]), inCmp, outCmp, 
-                             msk, fmt)
+            copyDataset('/'.join([groupName, dsName]), inCmp, outCmp, 
+                        msk, fmt)
     
-    def copyGroup(self, groupName, inCmp, outCmp):
+    def copyGroup(groupName, inCmp, outCmp):
         if groupName in inCmp:
             outCmp.copy(inCmp[groupName], groupName)
 
-    def select(self, inCmp, outCmp, idxs):
-        fmt = CmpH5Format(inCmp)
+    try:
+        inCmp  = H5.File(inCmpFile, 'r')
+        outCmp = H5.File(outCmpFile, 'w') # fail if it exists. 
+        idxs   = NP.array(idxs)
+        fmt    = CmpH5Format(inCmp)
         
         if not (NP.max(idxs) < inCmp[fmt.ALN_INDEX].shape[0] and
                 NP.min(idxs) >= 0):
@@ -100,21 +69,21 @@ class CmpH5Select(object):
         # copy over the AlnIndex and other AlnInfo elements
         # correpsonding to idxs to new file. 
         for dsName in inCmp[fmt.ALN_INFO].keys():
-            self.copyDataset('/'.join([fmt.ALN_INFO, dsName]), inCmp, outCmp, idxs, fmt)
+            copyDataset('/'.join([fmt.ALN_INFO, dsName]), inCmp, outCmp, idxs, fmt)
                     
         # reset the ALN_ID
         outCmp[fmt.ALN_INDEX][:,fmt.ID] = \
             NP.array(range(1, outCmp[fmt.ALN_INDEX].shape[0] + 1))
         
         # trim the other datasets
-        self.trimDataset(fmt.ALN_GROUP, fmt.ALN_ID, inCmp, outCmp, fmt)
-        self.trimDataset(fmt.REF_GROUP, fmt.REF_ID, inCmp, outCmp, fmt)
-        self.trimDataset(fmt.MOVIE_INFO, fmt.MOVIE_ID, inCmp, outCmp, fmt)
+        trimDataset(fmt.ALN_GROUP, fmt.ALN_ID, inCmp, outCmp, fmt)
+        trimDataset(fmt.REF_GROUP, fmt.REF_ID, inCmp, outCmp, fmt)
+        trimDataset(fmt.MOVIE_INFO, fmt.MOVIE_ID, inCmp, outCmp, fmt)
 
         # other groups will go over whole hog
-        self.copyGroup(fmt.FILE_LOG, inCmp, outCmp)
-        self.copyGroup(fmt.REF_INFO, inCmp, outCmp)
-        self.copyGroup(fmt.BARCODE_INFO, inCmp, outCmp)
+        copyGroup(fmt.FILE_LOG, inCmp, outCmp)
+        copyGroup(fmt.REF_INFO, inCmp, outCmp)
+        copyGroup(fmt.BARCODE_INFO, inCmp, outCmp)
         
         # now we copy over the actual data
         for i in xrange(0, outCmp[fmt.ALN_GROUP_ID].shape[0]):
@@ -141,8 +110,15 @@ class CmpH5Select(object):
                     cs = newEnd
      
         # copy over the top-level attributes
-        self.copyAttributes(inCmp, outCmp)
+        copyAttributes(inCmp, outCmp)
         
         # remove the offset table
-        del outCmp[fmt.REF_OFFSET_TABLE]
+        deleteIfExists(outCmp, fmt.REF_OFFSET_TABLE)
         
+    except Exception, e:
+        logging.exception(e)
+        try:
+            os.remove(outCmpFile)
+        except:
+            pass
+        raise e
