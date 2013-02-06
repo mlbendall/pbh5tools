@@ -236,9 +236,18 @@ def cmpH5Merge(inFiles, outFile):
         uRefsWithAlignments = NP.unique(outCmp[fmt.ALN_INDEX][:,fmt.REF_ID])
         outCmp.create_dataset(fmt.REF_GROUP_ID, data = uRefsWithAlignments)
         outCmp.create_dataset(fmt.REF_GROUP_PATH, 
-                              data = NP.array([makeRefName(z) for z in uRefsWithAlignments],
+                              data = NP.array([('/' + makeRefName(z)) for z in uRefsWithAlignments],
                                               dtype = H5.special_dtype(vlen = str)))
         outCmp.create_dataset(fmt.REF_GROUP_INFO_ID, data = uRefsWithAlignments)
+
+        # reset the alignment IDs 
+        outCmp[fmt.ALN_INDEX][:,fmt.ALN_ID] = range(1, outCmp[fmt.ALN_INDEX].shape[0] + 1)
+        # reset the molecule IDs
+        outCmp[fmt.ALN_INDEX][:,fmt.MOLECULE_ID] = \
+            ((NP.max(outCmp[fmt.ALN_INDEX][:,fmt.MOLECULE_ID]) * 
+              (outCmp[fmt.ALN_INDEX][:,fmt.MOVIE_ID] - 1)) + 
+             outCmp[fmt.ALN_INDEX][:,fmt.HOLE_NUMBER] + 1)
+        
     
     except Exception, e:
         logging.exception(e)
