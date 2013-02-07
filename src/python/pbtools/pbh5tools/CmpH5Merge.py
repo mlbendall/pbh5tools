@@ -109,7 +109,7 @@ def cmpH5Merge(inFiles, outFile):
         if not allEqual([z[fmt.REF_INFO]['MD5'].value for z in inCmps]):
             raise PBH5ToolsException("Different reference sequences.")
     
-        # check for consisteny of things like barcode and edna/z score
+        # check for consistency of things like barcode and edna/z score
         # datasets.
         hasBarcode = all([ fmt.BARCODE_INFO in z for z in inCmps ])
         extraDatasets = [set(filter(lambda x : not x == fmt.ALN_INDEX_NAME, 
@@ -136,7 +136,8 @@ def cmpH5Merge(inFiles, outFile):
         
         # top-level attributes.
         copyAttributes(inCmps[0], outCmp)
-
+        deleteAttrIfExists(outCmp, fmt.INDEX_ATTR)
+        
         # go through by REF_INFO_ID and select the relevant bits from each file. 
         refInfoIDs = outCmp[fmt.REF_INFO]['ID'].value
         
@@ -236,7 +237,8 @@ def cmpH5Merge(inFiles, outFile):
         uRefsWithAlignments = NP.unique(outCmp[fmt.ALN_INDEX][:,fmt.REF_ID])
         outCmp.create_dataset(fmt.REF_GROUP_ID, data = uRefsWithAlignments)
         outCmp.create_dataset(fmt.REF_GROUP_PATH, 
-                              data = NP.array([('/' + makeRefName(z)) for z in uRefsWithAlignments],
+                              data = NP.array([('/' + makeRefName(z)) for z in 
+                                               uRefsWithAlignments],
                                               dtype = H5.special_dtype(vlen = str)))
         outCmp.create_dataset(fmt.REF_GROUP_INFO_ID, data = uRefsWithAlignments)
 
@@ -247,6 +249,11 @@ def cmpH5Merge(inFiles, outFile):
             ((NP.max(outCmp[fmt.ALN_INDEX][:,fmt.MOLECULE_ID]) * 
               (outCmp[fmt.ALN_INDEX][:,fmt.MOVIE_ID] - 1)) + 
              outCmp[fmt.ALN_INDEX][:,fmt.HOLE_NUMBER] + 1)
+        
+            
+
+        # close the sucker. 
+        outCmp.close()
         
     
     except Exception, e:

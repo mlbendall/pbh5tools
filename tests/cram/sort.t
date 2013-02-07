@@ -16,6 +16,6 @@
   $ cmph5tools.py sort --outFile ptmp.cmp.h5 --deep --usePythonIndexer $INH5
   $ echo $?
   0
-  $ cmph5tools.py compare tmp.cmp.h5 ptmp.cmp.h5
+  $ cmph5tools.py equal tmp.cmp.h5 ptmp.cmp.h5
   $ echo $?
   0

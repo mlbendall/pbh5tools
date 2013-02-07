@@ -114,6 +114,7 @@ def cmpH5Select(inCmpFile, outCmpFile, idxs):
         
         # remove the offset table
         deleteIfExists(outCmp, fmt.REF_OFFSET_TABLE)
+        deleteAttrIfExists(outCmp, fmt.INDEX_ATTR)
         
     except Exception, e:
         logging.exception(e)

@@ -36,6 +36,10 @@ import tempfile
 import h5py as H5
 import numpy as NP
 
+def deleteAttrIfExists(ds, nm):
+    if nm in ds.attrs:
+        del ds.attrs[nm]
+
 def deleteIfExists(ds, nm):
     if nm in ds:
         del ds[nm]

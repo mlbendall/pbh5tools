@@ -435,7 +435,8 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
                            dtype = H5.h5t.NATIVE_UINT32, maxshape = (None, None))
 
         ## add the index attribute.
-        cH5['/'].attrs.create("Index", ['REF_ID', 'TARGET_START', 'TARGET_END'])
+        cH5['/'].attrs.create(format.INDEX_ATTR,
+                              format.INDEX_ELTS)
 
         ## fixup attributes.
         for oA in originalAttrs:

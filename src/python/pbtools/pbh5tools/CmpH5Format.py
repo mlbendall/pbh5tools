@@ -67,3 +67,7 @@ class CmpH5Format:
         self.extraTables = ['/'.join([self.ALN_INFO, x]) for x in 
                             cmpH5[self.ALN_INFO].keys()
                             if not x == self.ALN_INDEX_NAME]
+        # sorting
+        self.INDEX_ATTR = "Index"
+        self.INDEX_ELTS = ['REF_ID', 'TARGET_START', 'TARGET_END']
+

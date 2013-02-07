@@ -43,14 +43,14 @@ from pbtools.pbh5tools.CmpH5Select import cmpH5Select
 from pbtools.pbh5tools.CmpH5Merge import cmpH5Merge
 from pbtools.pbh5tools.CmpH5Sort import cmpH5Sort
 from pbtools.pbh5tools.CmpH5Stats import cmpH5Stats
-from pbtools.pbh5tools.CmpH5Compare import cmpH5Compare
+from pbtools.pbh5tools.CmpH5Compare import cmpH5Equal, cmpH5Summarize
 
 __p4revision__ = "$Revision$"
 __p4change__ = "$Change$"
 revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
 changeNum = int(__p4change__.strip("$").split(":")[-1])
-__version__ = "%s-r%d-c%d" % ( pkg_resources.require("pbtools.pbh5tools")[0].version, revNum, changeNum )
-
+__version__ = "%s-r%d-c%d" % ( pkg_resources.require("pbtools.pbh5tools")[0].version, revNum, 
+                               changeNum )
 
 class CmpH5ToolsRunner(PBMultiToolRunner):
     def __init__(self):
@@ -58,73 +58,83 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                 'Notes: For all command-line arguments, default values are listed in [].']
         super(CmpH5ToolsRunner, self).__init__('\n'.join(desc))
         subparsers = self.getSubParsers()
-      
+        
         # select
         desc = ['Create a new cmp.h5 file by selecting alignments.']
-        parser_m = subparsers.add_parser('select', help = 'select', 
-                                         description = '\n'.join(desc),
-                                         parents = [self.parser])
-        parser_m.add_argument('inCmp', metavar='input.cmp.h5')
-        parser_m.add_argument('outCmp', metavar='output.cmp.h5')
-        parser_m.add_argument('idxs', metavar='N', type=int, nargs='+',
-                              help='indices to select')
+        parser = subparsers.add_parser('select', help = 'select', 
+                                       description = '\n'.join(desc),
+                                       parents = [self.parser])
+        parser.add_argument('inCmp', metavar='input.cmp.h5')
+        parser.add_argument('outCmp', metavar='output.cmp.h5')
+        parser.add_argument('idxs', metavar='N', type=int, nargs='+',
+                            help='indices to select')
      
         # merge
         desc = ['Merge two or more cmp.h5 files.']
-        parser_m = subparsers.add_parser('merge', 
-                                         help = 'merge',
-                                         description='\n'.join(desc),
-                                         parents=[self.parser])
-        parser_m.add_argument('--outFile', 
-                              dest='outCmp', default='out.cmp.h5', 
-                              help='output filename [%(default)s]')
-        parser_m.add_argument('inCmps', metavar='input.cmp.h5', nargs='+',
-                              help='input filenames')
+        parser = subparsers.add_parser('merge', 
+                                       help = 'merge',
+                                       description='\n'.join(desc),
+                                       parents=[self.parser])
+        parser.add_argument('--outFile', 
+                            dest='outCmp', default='out.cmp.h5', 
+                            help='output filename [%(default)s]')
+        parser.add_argument('inCmps', metavar='input.cmp.h5', nargs='+',
+                            help='input filenames')
 
         # sort
         desc = ['Sort cmp.h5 files. If output-file is unspecified the input-file is',
                 'overwritten']
-        parser_s = subparsers.add_parser('sort',
+        parser= subparsers.add_parser('sort',
                                          help='sort cmp.h5 file',
                                          description='\n'.join(desc),
                                          parents=[self.parser])
-        parser_s.add_argument('inCmp', metavar='input.cmp.h5',
+        parser.add_argument('inCmp', metavar='input.cmp.h5',
                               help='input filename')
-        parser_s.add_argument('--outFile', dest='outCmp', 
+        parser.add_argument('--outFile', dest='outCmp', 
                                help='output filename')
-        parser_s.add_argument('--deep', dest='deepsort', action='store_true',
+        parser.add_argument('--deep', dest='deepsort', action='store_true',
                               help='whether a deep sorting should be conducted, i.e. sort the' + 
                               'AlignmentArrays [%(default)s]')
-        parser_s.add_argument('--tmpDir', dest='tmpdir', default='/tmp',  
+        parser.add_argument('--tmpDir', dest='tmpdir', default='/tmp',  
                               help='temporary directory to use when sorting in-place [%(default)s]')
-        parser_s.add_argument('--usePythonIndexer', dest='usePythonIndexer', default = False, 
+        parser.add_argument('--usePythonIndexer', dest='usePythonIndexer', default = False, 
                               action = 'store_true',  
                               help='Whether to use native indexing [%(default)s].')
-        parser_s.add_argument('--inPlace', dest='inPlace', default = False, action = 'store_true',
-                              help = 'Whether to make a temporary copy of the original cmp.h5 file before sorting.')
+        parser.add_argument('--inPlace', dest='inPlace', default = False, action = 'store_true',
+                              help = 'Whether to make a temporary copy of the original cmp.h5' + 
+                              ' file before sorting.')
 
-        # compare
+        # equal
         desc = ['Compare two cmp.h5 files for equivalence.']
-        parser_c = subparsers.add_parser('compare',
+        parser = subparsers.add_parser('equal',
                                          help='compare two cmp.h5 files for equivalence',
                                          description='\n'.join(desc),
                                          parents=[self.parser])
-        parser_c.add_argument('inCmps', metavar='input.cmp.h5', 
-                              nargs=2, help='input filenames')
+        parser.add_argument('inCmp1', metavar='cmp.h5.1', help='filename 1')
+        parser.add_argument('inCmp2', metavar='cmp.h5.2', help='filename 2')
 
+        # summarize
+        desc = ['Summarize cmp.h5 files.']
+        parser = subparsers.add_parser('summarize',
+                                         help='summarize contents of cmp.h5 files',
+                                         description='\n'.join(desc),
+                                         parents=[self.parser])
+        parser.add_argument('inCmps', metavar='inCmps', nargs='+',
+                            help='cmp.h5 files to summarize')
+     
         # stats
         desc = ['Emit statistics from a cmp.h5 file.']
-        parser_stats = subparsers.add_parser('stats',
-                                             help='print a csv for a cmp.h5 file',
-                                             description='\n'.join(desc),
-                                             parents=[self.parser])
-        parser_stats.add_argument('--groupBy', metavar='groupBy', 
-                                  help = 'how to group the results, .e.g., movie, reference,' + 
+        parser = subparsers.add_parser('stats',
+                                       help='print a csv for a cmp.h5 file',
+                                       description='\n'.join(desc),
+                                       parents=[self.parser])
+        parser.add_argument('--groupBy', metavar='groupBy', 
+                            help = 'how to group the results, .e.g., movie, reference,' + 
                                   'subread, molecule', 
-                                  default = None)
-        parser_stats.add_argument('inCmp', metavar='input.cmp.h5',
+                            default = None)
+        parser.add_argument('inCmp', metavar='input.cmp.h5',
                                   help='input filename')
-
+        
     def getVersion(self):
         return __version__
     
@@ -135,14 +145,19 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                 cmpH5Merge(self.args.inCmps, self.args.outCmp)
             elif cmd == 'sort':
                 cmpH5Sort(self.args.inCmp, self.args.outCmp, self.args.tmpdir, 
-                          deep = self.args.deepsort, useNative = not self.args.usePythonIndexer,
+                          deep = self.args.deepsort, 
+                          useNative = not self.args.usePythonIndexer,
                           inPlace = self.args.inPlace)
             elif cmd == 'select':
                 cmpH5Select(self.args.inCmp, self.args.outCmp, self.args.idxs)
             elif cmd == 'stats':
                 cmpH5Stats(self.args.inCmp, self.args.groupBy).run()
-            elif cmd == 'compare':
-                cmpH5Compare(self.args.inCmps[0], self.args.inCmps[1])
+            elif cmd == 'equal':
+                res = cmpH5Equal(self.args.inCmp1, self.args.inCmp2)
+            elif cmd == 'summarize':
+                for inCmp in self.args.inCmps:
+                    print "".join(["-"] * 40)
+                    print cmpH5Summarize(inCmp)
             else:
                 raise PBH5ToolsException("NA", "Unkown command passed to cmph5tools.py:" + 
                                          self.args.subName)

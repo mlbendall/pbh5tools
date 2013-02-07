@@ -26,10 +26,45 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #################################################################################$$
-
 import logging
+import os
 import numpy as NP
 import h5py as H5
 
-def cmpH5Compare(inCmp1, inCmp2):
-    pass
+from pbcore.io.CmpH5Reader import *
+from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
+
+def cmpH5Equal(inCmp1, inCmp2):
+    """Compare two cmp.h5 files for equality. Here equality means the
+    alignments are the same and they are in the same
+    order. Additionally, the reference information in the files has to
+    be the same."""
+    cmp1 = CmpH5Reader(inCmp1)
+    cmp2 = CmpH5Reader(inCmp2)
+
+    if not len(cmp1) == len(cmp2):
+        raise PBH5ToolsException('equal', "Alignment Indices differ in length: (%d, %d)" % \
+                                     (len(cmp1), len(cmp2)))
+        
+    aeq = [ a1 == a2 for a1,a2 in zip(cmp1, cmp2) ]
+    if not all(aeq):
+        raise PBH5ToolsException('equal', "%d alignments differ" % \
+                                     sum(map(lambda x : 1 if x else 0, aeq)))
+    return True
+
+def cmpH5Summarize(inCmp):
+    """Summarize a cmp.h5 file"""
+    reader = CmpH5Reader(inCmp)
+    tstr   = "filename: %s\nversion:  %s\nn reads:  %d\nn refs:   " + \
+        "%d\nn movies: %d\nn bases:  %d\navg rl:   %d\navg acc:  %g"
+
+    rl  = [ r.readLength for r in reader ]
+    acc = [ r.accuracy for r in reader ] 
+
+    return (tstr % (os.path.basename(reader.file.filename), reader.version, len(reader), 
+                    len(reader.referenceTable), len(reader.movieTable), NP.sum(rl),
+                    NP.round(NP.mean(rl)), NP.round(NP.mean(acc), 4)))
+
+
+    
+    
