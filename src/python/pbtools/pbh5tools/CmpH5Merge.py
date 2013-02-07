@@ -243,7 +243,7 @@ def cmpH5Merge(inFiles, outFile):
         outCmp.create_dataset(fmt.REF_GROUP_INFO_ID, data = uRefsWithAlignments)
 
         # reset the alignment IDs 
-        outCmp[fmt.ALN_INDEX][:,fmt.ALN_ID] = range(1, outCmp[fmt.ALN_INDEX].shape[0] + 1)
+        outCmp[fmt.ALN_INDEX][:,fmt.ID] = range(1, outCmp[fmt.ALN_INDEX].shape[0] + 1)
         # reset the molecule IDs
         outCmp[fmt.ALN_INDEX][:,fmt.MOLECULE_ID] = \
             ((NP.max(outCmp[fmt.ALN_INDEX][:,fmt.MOLECULE_ID]) * 
