@@ -57,7 +57,7 @@ def copyDataset(absDsName, inCmp, outCmp, selection = None,
                 copyAttrs = True):
     
     inDs = inCmp[absDsName]
-    if not selection == None: 
+    if selection is not None: 
         if len(inDs.shape) <= 1:
             ndta = inDs.value[selection]
         else:

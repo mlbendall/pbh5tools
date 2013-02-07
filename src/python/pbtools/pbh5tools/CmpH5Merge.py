@@ -57,12 +57,13 @@ def processMovies(outCmp, inCmps, fmt):
 
     def l(i, nm):
         return cmpH5[nm][i] if nm in cmpH5 else None
-    def w(i, nm, dtype):
-        if any([z[i] == None for z in umovies]):
+    def w(i, nm):
+        if any([z[i] is None for z in umovies]):
             logging.info("No dataset: %s" % nm)
         else:
-            outCmp.create_dataset(nm, data = NP.array([z[i] for z in umovies], 
-                                                      dtype = dtype))
+            # take dtype from previous dataset.
+            outCmp.create_dataset(nm, data = NP.array([z[i] for z in umovies]),
+                                  dtype = inCmps[0][nm].dtype)
     for cmpH5 in inCmps:
         for i,n in enumerate(cmpH5[fmt.MOVIE_INFO_NAME]):
             if not n in [u[1] for u in umovies]:
@@ -73,11 +74,11 @@ def processMovies(outCmp, inCmps, fmt):
                                 l(i, fmt.MOVIE_INFO_EXP)))
                 newMovieID += 1
     # write the information to the new file.
-    w(0, fmt.MOVIE_INFO_ID, int)
-    w(1, fmt.MOVIE_INFO_NAME, H5.special_dtype(vlen = str))
-    w(2, fmt.MOVIE_INFO_FRAME_RATE, int)
-    w(3, fmt.MOVIE_INFO_RUN, int)
-    w(4, fmt.MOVIE_INFO_EXP, int)
+    w(0, fmt.MOVIE_INFO_ID)
+    w(1, fmt.MOVIE_INFO_NAME)
+    w(2, fmt.MOVIE_INFO_FRAME_RATE) 
+    w(3, fmt.MOVIE_INFO_RUN)
+    w(4, fmt.MOVIE_INFO_EXP)
    
     return umovies
 
@@ -97,7 +98,7 @@ def makeOrAppend(outCmp, dsName, newDta, chunks = True):
 def cmpH5Merge(inFiles, outFile):
     try:
         inCmps = [H5.File(z, 'r') for z in inFiles]
-        outCmp = H5.File(outFile, 'w') # fail if it exists.
+        outCmp = H5.File(outFile, 'w') 
         
         logging.debug("Loaded input and output h5 files.")
         
@@ -166,22 +167,23 @@ def cmpH5Merge(inFiles, outFile):
                     raise PBH5Exception("Error processing movies.")
         
             for rID in refInfoIDs:
-                if not rID in refIDMap.values():
+                if rID not in refIDMap.values():
                     logging.info("Skipping reference with no reads.")
                     continue
                 
-                # set the new reference ID.
+                # compute new reference ID.
                 aIdx    = cmpH5[fmt.ALN_INDEX].value
                 refID   = {x:y for y,x in refIDMap.iteritems()}[rID]
                 refName = makeRefName(rID)
 
-                if not sum(aIdx[:,fmt.REF_ID] == refID):
-                    logging.info("No reads mapped to reference: %d for %s" % 
-                                 (rID, cmpH5.filename))
-                    continue
-
                 # which reads go to this reference. 
                 whichReads = aIdx[:,fmt.REF_ID] == refID
+                if not any(whichReads):
+                    # this should be covered by the test at the top,
+                    # but it is not really perfectly defined by the
+                    # spec as to whether something in the ref group
+                    # *has* to have alignments.
+                    continue 
                 aIdx = aIdx[whichReads, ]
                 aIdx[:,fmt.REF_ID] = rID
 
@@ -227,42 +229,42 @@ def cmpH5Merge(inFiles, outFile):
             
                 # write the ALN_GROUP.
                 makeOrAppend(outCmp, fmt.ALN_GROUP_ID, 
-                             NP.array([nid for nid,a,b in newAlnGroup]))
+                             NP.array([nid for nid,a,b in newAlnGroup],
+                                      dtype = cmpH5[fmt.ALN_GROUP_ID].dtype))
                 makeOrAppend(outCmp, fmt.ALN_GROUP_PATH, 
                              NP.array([npth for a,npth,b in newAlnGroup], 
-                                      dtype = H5.special_dtype(vlen = str)))
+                                      dtype = cmpH5[fmt.ALN_GROUP_PATH].dtype))
 
         # now depending on what references had alignments we'll make the
         # new REF_GROUP.
         uRefsWithAlignments = NP.unique(outCmp[fmt.ALN_INDEX][:,fmt.REF_ID])
-        outCmp.create_dataset(fmt.REF_GROUP_ID, data = uRefsWithAlignments)
+        outCmp.create_dataset(fmt.REF_GROUP_ID, data = uRefsWithAlignments,
+                              dtype = inCmps[0][fmt.REF_GROUP_ID].dtype)
         outCmp.create_dataset(fmt.REF_GROUP_PATH, 
                               data = NP.array([('/' + makeRefName(z)) for z in 
-                                               uRefsWithAlignments],
-                                              dtype = H5.special_dtype(vlen = str)))
-        outCmp.create_dataset(fmt.REF_GROUP_INFO_ID, data = uRefsWithAlignments)
+                                               uRefsWithAlignments]),
+                              dtype = inCmps[0][fmt.REF_GROUP_PATH].dtype)
+        outCmp.create_dataset(fmt.REF_GROUP_INFO_ID, data = uRefsWithAlignments,
+                              dtype = inCmps[0][fmt.REF_GROUP_INFO_ID].dtype)
 
-        # reset the alignment IDs 
+        # reset the IDs 
         outCmp[fmt.ALN_INDEX][:,fmt.ID] = range(1, outCmp[fmt.ALN_INDEX].shape[0] + 1)
         # reset the molecule IDs
         outCmp[fmt.ALN_INDEX][:,fmt.MOLECULE_ID] = \
             ((NP.max(outCmp[fmt.ALN_INDEX][:,fmt.MOLECULE_ID]) * 
               (outCmp[fmt.ALN_INDEX][:,fmt.MOVIE_ID] - 1)) + 
              outCmp[fmt.ALN_INDEX][:,fmt.HOLE_NUMBER] + 1)
-        
-            
 
         # close the sucker. 
         outCmp.close()
-        
     
     except Exception, e:
-        logging.exception(e)
         try:
+            # remove the file as it won't be correct
             os.remove(outFile)
         except:
             pass 
         raise e  
-
+    
                 
 
