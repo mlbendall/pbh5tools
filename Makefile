@@ -16,8 +16,15 @@ install:
 develop:
 	python setup.py develop
 
+test:
+	find tests -name "*.py" | xargs nosetests
+	find tests/cram -name "*.t" | xargs cram 
+doc:
+	sphinx-apidoc -T -f -o doc src/ && cd doc && make html
+
 doc-clean:
-	cd doc && rm -rf modules.rst pbtools.* bash5lib.* cmph5tools.* bash5tools.* _templates _static _build searchindex.js objects.inv
+	cd doc && rm -rf modules.rst pbtools.* bash5lib.* cmph5tools.* \
+	bash5tools.* _templates _static _build searchindex.js objects.inv
 
 clean: doc-clean
 	rm -rf build/;\
@@ -26,9 +33,3 @@ clean: doc-clean
 	rm -rf dist/
 	rm -f nosetests.xml
 	make -C src/C clean
-
-test:
-	find tests -name "*.py" | xargs nosetests
-	find tests/cram -name "*.t" | xargs cram
-doc:
-	sphinx-apidoc -T -f -o doc src/ && cd doc && make html
