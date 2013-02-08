@@ -41,7 +41,7 @@ from pbtools.pbh5tools.CmpH5Format import CmpH5Format
 
 import pbcore.io.rangeQueries as RQ
 
-__VERSION__ = ".73"
+__VERSION__ = ".75"
 
 def numberWithinRange(s, e, vec):
     """
@@ -201,14 +201,13 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
     def getRefGroup(gID):
          return(cH5[refGroupPaths[gID]])
 
-    def chooseAlnGroupNames(gID, readBlocks):
+    def chooseAlnGroupNames(gID, readBlocks, start = 1):
          rGroup = cH5[refGroupPaths[gID]]
          currentGroups = rGroup.keys()
-         rint = NP.random.randint(1000, 9999)
-         pref = 'rg' + str(rint) + '-'
+         pref = 'rg' + str(start) + '-'
          newNames = [ pref + str(i) for i,j in enumerate(readBlocks) ]
          if any([ nn in currentGroups for nn in newNames ]):
-              return chooseAlnGroupNames(gID, readBlocks)
+              return chooseAlnGroupNames(gID, readBlocks, start = start + 1)
          else:
               return newNames
 
