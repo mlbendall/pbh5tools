@@ -36,11 +36,35 @@ import tempfile
 import h5py as H5
 import numpy as NP
 
+from pbcore.io.CmpH5Reader import *
+
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 from pbtools.pbh5tools.CmpH5Format import CmpH5Format
 from pbtools.pbh5tools.CmpH5Utils import *
- 
-def cmpH5Select(inCmpFile, outCmpFile, idxs):
+from pbtools.pbh5tools.Metrics import *
+
+def cmpH5Select(inCmpFile, outCmp, idxs = None, 
+                groupByStr = None, whereStr = None):
+    """Take a vector of indices or a where expression and select a set
+    of alignments. If a groupBy is specified, then produce a cmp.h5
+    file for each distinct member of the grouping."""
+    if idxs:
+        doSelect(inCmpFile, outCmp, idxs)
+    else:
+        where   = DefaultWhere() if whereStr is None else eval(whereStr)
+        groupBy = DefaultGroupBy() if groupByStr is None else eval(groupByStr)
+        idxVecs = query(CmpH5Reader(inCmpFile), 
+                        what = AlignmentIdx, 
+                        where = where, 
+                        groupBy = groupBy)
+        keys = idxVecs.keys()
+        if len(keys) == 1:
+            doSelect(inCmpFile, outCmp, idxVecs[keys[0]])
+        else:
+            for k in keys:
+                doSelect(inCmpFile, "%s.cmp.h5" % str(k), idxVecs[k])
+                
+def doSelect(inCmpFile, outCmpFile, idxs):
     """Take an input cmp.h5 file and a vector of indices into the
     AlnIndex and create a new cmp.h5 file from those alignments."""
     def trimDataset(groupName, alnIdxID, inCmp, outCmp, fmt, idName = 'ID'):

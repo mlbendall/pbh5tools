@@ -1,14 +1,14 @@
   $ export INH5=`python -c "from pbcore import data ; print data.getCmpH5()['cmph5']"`
-  $ cmph5tools.py select $INH5 left.cmp.h5 0 1 2 3
+  $ cmph5tools.py select $INH5 --outFile left.cmp.h5 --idx 0 1 2 3
   $ echo $?  
   0
-  $ cmph5tools.py select $INH5 right.cmp.h5 4 5 6 7
+  $ cmph5tools.py select $INH5 --outFile right.cmp.h5 --idx 4 5 6 7
   $ echo $?  
   0
   $ cmph5tools.py merge --outFile merged.cmp.h5 left.cmp.h5 right.cmp.h5
   $ echo $?
   0
-  $ cmph5tools.py select $INH5 tot.cmp.h5 0 1 2 3 4 5 6 7
+  $ cmph5tools.py select $INH5 --outFile tot.cmp.h5 --idx 0 1 2 3 4 5 6 7
   $ echo $?
   0
   $ cmph5tools.py sort merged.cmp.h5

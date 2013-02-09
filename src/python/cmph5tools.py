@@ -49,25 +49,39 @@ __p4revision__ = "$Revision$"
 __p4change__ = "$Change$"
 revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
 changeNum = int(__p4change__.strip("$").split(":")[-1])
-__version__ = "%s-r%d-c%d" % ( pkg_resources.require("pbtools.pbh5tools")[0].version, revNum, 
-                               changeNum )
+__version__ = "%s-r%d-c%d" % ( pkg_resources.require("pbtools.pbh5tools")[0].version, 
+                               revNum, changeNum )
 
 class CmpH5ToolsRunner(PBMultiToolRunner):
     def __init__(self):
-        desc = ['Toolkit for all command-line tools associated with cmp.h5 file processing.',
+        desc = ['Toolkit for command-line tools associated with cmp.h5 file processing.',
                 'Notes: For all command-line arguments, default values are listed in [].']
         super(CmpH5ToolsRunner, self).__init__('\n'.join(desc))
         subparsers = self.getSubParsers()
         
         # select
-        desc = ['Create a new cmp.h5 file by selecting alignments.']
+        desc = ['Create a new cmp.h5 file by selecting alignments.',
+                'Users can specify indices using the idx argument to select',
+                'particular alignments.',
+                'Alternatively, users can specify a where expression which chooses',
+                'the alignments which the predicate is true.',
+                'If a groupBy expression is specified then mulitple cmp.h5 files are',
+                'generated according to the expression. For instance, if a user wanted'
+                'to generate a cmp.h5 file for each reference sequence then --groupBy=Reference']
         parser = subparsers.add_parser('select', help = 'select', 
                                        description = '\n'.join(desc),
                                        parents = [self.parser])
         parser.add_argument('inCmp', metavar='input.cmp.h5')
-        parser.add_argument('outCmp', metavar='output.cmp.h5')
-        parser.add_argument('idxs', metavar='N', type=int, nargs='+',
+        parser.add_argument('--outFile',
+                            default = "out.cmp.h5",
+                            dest='outCmp', metavar='out.cmp.h5',
+                            help = "Either a pattern string or a filename")
+        parser.add_argument('--idxs', metavar='N', type=int, nargs='+',
                             help='indices to select')
+        parser.add_argument('--groupBy', metavar='groupBy-expression',
+                            type = str, help='groupBy expression, e.g., Movie*Barcode')
+        parser.add_argument('--where', metavar='where-expression',
+                            type = str, help='where expression, e.g., ReadLength > 500')
      
         # merge
         desc = ['Merge two or more cmp.h5 files.']
@@ -103,7 +117,6 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         parser.add_argument('--inPlace', dest='inPlace', default = False, action = 'store_true',
                               help = 'Whether to make a temporary copy of the original cmp.h5' + 
                               ' file before sorting.')
-
         # equal
         desc = ['Compare two cmp.h5 files for equivalence.']
         parser = subparsers.add_parser('equal',
@@ -128,11 +141,13 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                                        help='print a csv for a cmp.h5 file',
                                        description='\n'.join(desc),
                                        parents=[self.parser])
-        parser.add_argument('--what', metavar = 'what expression',
+        parser.add_argument('--outFile', dest='outCsv', 
+                            help='output csv filename', default = None)
+        parser.add_argument('--what', metavar = 'what-expression',
                             default = None)
-        parser.add_argument('--where', metavar = 'where expression',
+        parser.add_argument('--where', metavar = 'where-expression',
                             default = None)
-        parser.add_argument('--groupBy', metavar='groupBy expression', 
+        parser.add_argument('--groupBy', metavar='groupBy-expression', 
                             default = None)
         parser.add_argument('inCmp', metavar='input.cmp.h5',
                                   help='input filename')
@@ -151,12 +166,16 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                           useNative = not self.args.usePythonIndexer,
                           inPlace = self.args.inPlace)
             elif cmd == 'select':
-                cmpH5Select(self.args.inCmp, self.args.outCmp, self.args.idxs)
+                cmpH5Select(self.args.inCmp, self.args.outCmp, 
+                            idxs = self.args.idxs, whereStr = self.args.where, 
+                            groupByStr = self.args.groupBy)
             elif cmd == 'stats':
-                cmpH5Stats(self.args.inCmp, self.args.what, self.args.where, self.args.groupBy)
+                cmpH5Stats(self.args.inCmp, self.args.what, self.args.where, 
+                           self.args.groupBy, self.args.outCsv)
             elif cmd == 'equal':
                 res = cmpH5Equal(self.args.inCmp1, self.args.inCmp2)
             elif cmd == 'summarize':
+                # XXX : what should this guy do?
                 for inCmp in self.args.inCmps:
                     print "".join(["-"] * 40)
                     print cmpH5Summarize(inCmp)
