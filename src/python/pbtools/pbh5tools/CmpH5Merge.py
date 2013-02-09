@@ -108,7 +108,7 @@ def cmpH5Merge(inFiles, outFile):
         fmt = CmpH5Format(inCmps[0])
     
         if not allEqual([z[fmt.REF_INFO]['MD5'].value for z in inCmps]):
-            raise PBH5ToolsException("Different reference sequences.")
+            raise PBH5ToolsException("merge", "Different reference sequences.")
     
         # check for consistency of things like barcode and edna/z score
         # datasets.
@@ -126,7 +126,7 @@ def cmpH5Merge(inFiles, outFile):
         inCmps = filter(filterPrint, inCmps)
         
         if not len(inCmps):
-            raise PBH5ToolsException("No non-empty files to merge.")
+            raise PBH5ToolsException("merge", "No non-empty files to merge.")
 
         # copy REF_INFO, FILE_LOG, and BARCODE_INFO if its there.
         outCmp.copy(inCmps[0][fmt.REF_INFO], fmt.REF_INFO)
@@ -264,7 +264,7 @@ def cmpH5Merge(inFiles, outFile):
             os.remove(outFile)
         except:
             pass 
-        raise e  
+        raise
     
                 
 

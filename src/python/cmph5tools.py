@@ -128,9 +128,11 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                                        help='print a csv for a cmp.h5 file',
                                        description='\n'.join(desc),
                                        parents=[self.parser])
-        parser.add_argument('--groupBy', metavar='groupBy', 
-                            help = 'how to group the results, .e.g., movie, reference,' + 
-                                  'subread, molecule', 
+        parser.add_argument('--what', metavar = 'what expression',
+                            default = None)
+        parser.add_argument('--where', metavar = 'where expression',
+                            default = None)
+        parser.add_argument('--groupBy', metavar='groupBy expression', 
                             default = None)
         parser.add_argument('inCmp', metavar='input.cmp.h5',
                                   help='input filename')
@@ -151,7 +153,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
             elif cmd == 'select':
                 cmpH5Select(self.args.inCmp, self.args.outCmp, self.args.idxs)
             elif cmd == 'stats':
-                cmpH5Stats(self.args.inCmp, self.args.groupBy).run()
+                cmpH5Stats(self.args.inCmp, self.args.what, self.args.where, self.args.groupBy)
             elif cmd == 'equal':
                 res = cmpH5Equal(self.args.inCmp1, self.args.inCmp2)
             elif cmd == 'summarize':
