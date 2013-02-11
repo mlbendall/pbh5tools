@@ -82,7 +82,9 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                             type = str, help='groupBy expression, e.g., Movie*Barcode')
         parser.add_argument('--where', metavar='where-expression',
                             type = str, help='where expression, e.g., ReadLength > 500')
-     
+        parser.add_argument('--outDir', metavar='outputDir',
+                            type = str, default = ".")
+
         # merge
         desc = ['Merge two or more cmp.h5 files.']
         parser = subparsers.add_parser('merge', 
@@ -168,7 +170,8 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
             elif cmd == 'select':
                 cmpH5Select(self.args.inCmp, self.args.outCmp, 
                             idxs = self.args.idxs, whereStr = self.args.where, 
-                            groupByStr = self.args.groupBy)
+                            groupByStr = self.args.groupBy,
+                            outDir = self.args.outDir)
             elif cmd == 'stats':
                 cmpH5Stats(self.args.inCmp, self.args.what, self.args.where, 
                            self.args.groupBy, self.args.outCsv)

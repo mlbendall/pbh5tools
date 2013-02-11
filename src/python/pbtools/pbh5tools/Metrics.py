@@ -265,6 +265,10 @@ class _Reference(Factor):
     def produce(self, cmpH5, idx):
         return NP.array([cmpH5[i].referenceInfo['FullName'] for i in idx])
 
+class _RefIdentifier(Factor):
+    def produce(self, cmpH5, idx):
+        return NP.array([cmpH5[i].referenceInfo['Name'] for i in idx])
+
 class _HoleNumber(Factor):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['HoleNumber'][idx]
@@ -315,6 +319,7 @@ PolRate             = TemplateSpan/(ReadFrames/(FrameRate * 1.0))
 Movie               = _Movie()
 DefaultWhat         = (ReadLength, Accuracy)
 Reference           = _Reference()
+RefIdentifier       = _RefIdentifier()
 HoleNumber          = _HoleNumber()
 AlignmentIdx        = _AlignmentIdx()
 Strand              = _Strand()

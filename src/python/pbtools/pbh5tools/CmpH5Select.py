@@ -44,7 +44,8 @@ from pbtools.pbh5tools.CmpH5Utils import *
 from pbtools.pbh5tools.Metrics import *
 
 def cmpH5Select(inCmpFile, outCmp, idxs = None, 
-                groupByStr = None, whereStr = None):
+                groupByStr = None, whereStr = None,
+                outDir = "."):
     """Take a vector of indices or a where expression and select a set
     of alignments. If a groupBy is specified, then produce a cmp.h5
     file for each distinct member of the grouping."""
@@ -62,7 +63,8 @@ def cmpH5Select(inCmpFile, outCmp, idxs = None,
             doSelect(inCmpFile, outCmp, idxVecs[keys[0]])
         else:
             for k in keys:
-                doSelect(inCmpFile, "%s.cmp.h5" % str(k), idxVecs[k])
+                logging.debug("Processing output for %s" % str(k))
+                doSelect(inCmpFile, "/".join([outDir, "%s.cmp.h5" % str(k)]), idxVecs[k])
                 
 def doSelect(inCmpFile, outCmpFile, idxs):
     """Take an input cmp.h5 file and a vector of indices into the
