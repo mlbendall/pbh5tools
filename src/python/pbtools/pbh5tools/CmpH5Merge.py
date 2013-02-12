@@ -97,6 +97,9 @@ def makeOrAppend(outCmp, dsName, newDta, chunks = True):
 
 def cmpH5Merge(inFiles, outFile):
     try:
+        logging.debug("Processing:\n\t" + "\t\n".join(inFiles))
+        logging.debug("Writing to:" + str(outFile))
+
         inCmps = [H5.File(z, 'r') for z in inFiles]
         outCmp = H5.File(outFile, 'w') 
         

@@ -142,6 +142,10 @@ def doSelect(inCmpFile, outCmpFile, idxs):
         deleteIfExists(outCmp, fmt.REF_OFFSET_TABLE)
         deleteAttrIfExists(outCmp, fmt.INDEX_ATTR)
         
+        # close the sucker
+        logging.debug("Closing output cmp.h5 file.")
+        outCmp.close()
+
     except Exception, e:
         logging.exception(e)
         try:

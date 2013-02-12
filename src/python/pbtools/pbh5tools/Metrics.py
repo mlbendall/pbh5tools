@@ -179,11 +179,6 @@ def split(x, f):
         counts[k] -= 1
     return results
 
-def query(reader, what, where, groupBy):
-    idxs = NP.where(where.eval(reader, range(0, len(reader))))[0]
-    groupBy = groupBy.eval(reader, idxs)
-    return { k:what.eval(reader, v) for k,v in 
-             split(idxs, groupBy).items() }
 
 def toRecArray(res):
     recArrays = []
@@ -194,11 +189,9 @@ def toRecArray(res):
         if isinstance(k, str):
             if isinstance(dta[0], NP.ndarray): 
                 groupNames = NP.array([k] * len(dta[0]))
-                groupDtype = groupNames.dtype
             else:
                 groupNames = k
-                groupDtype = str
-            nameAndType.insert(0, ('Group', groupNames.dtype))
+            nameAndType.insert(0, ('Group', object))
             dta.insert(0, groupNames)
         recArrays.append(NP.rec.array(dta, dtype = nameAndType))
     return NP.hstack(recArrays)
@@ -211,6 +204,10 @@ class Mean(Statistic):
 class Median(Statistic):
     def f(self, x):
         return NP.median(x[~NP.isnan(x)])
+
+class Count(Statistic):
+    def f(self, x):
+        return NP.array([len(x)])
 
 class Q(Statistic):
     def __init__(self, metric, qtile = 95.0):
@@ -301,6 +298,10 @@ class _AlignmentIdx(Factor):
     def produce(self, cmpH5, idx):
         return idx
 
+class _Barcode(Factor):
+    def produce(self, cmpH5, idx):
+        return NP.array([ cmpH5[i].barcode for i in idx ])
+
 ###############################################################################
 ##
 ## Define the core metrics, try to define all metrics in terms of some
@@ -328,4 +329,12 @@ TemplateEnd         = _TemplateEnd()
 TemplateStart       = _TemplateStart()
 ReadEnd             = _ReadEnd()
 ReadStart           = _ReadStart()
+Barcode             = _Barcode()
 
+
+def query(reader, what = DefaultWhat, where = DefaultWhere(), 
+          groupBy = DefaultGroupBy()):
+    idxs = NP.where(where.eval(reader, range(0, len(reader))))[0]
+    groupBy = groupBy.eval(reader, idxs)
+    return { k:what.eval(reader, v) for k,v in 
+             split(idxs, groupBy).items() }
