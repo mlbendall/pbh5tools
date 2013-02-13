@@ -8,7 +8,7 @@ import sys
 
 setup(
     name = 'pbtools.pbh5tools',
-    version='0.1.0',
+    version='0.4.0',
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license='LICENSE.txt',

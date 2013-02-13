@@ -45,12 +45,7 @@ from pbtools.pbh5tools.CmpH5Sort import cmpH5Sort
 from pbtools.pbh5tools.CmpH5Stats import cmpH5Stats
 from pbtools.pbh5tools.CmpH5Compare import cmpH5Equal, cmpH5Summarize
 
-__p4revision__ = "$Revision$"
-__p4change__ = "$Change$"
-revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
-changeNum = int(__p4change__.strip("$").split(":")[-1])
-__version__ = "%s-r%d-c%d" % ( pkg_resources.require("pbtools.pbh5tools")[0].version, 
-                               revNum, changeNum )
+__version__ = "0.4.0"
 
 class CmpH5ToolsRunner(PBMultiToolRunner):
     def __init__(self):
