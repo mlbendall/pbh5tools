@@ -10,27 +10,6 @@ import pbtools.pbh5tools.CmpH5Sort as CS
 import pbcore.io.rangeQueries as RQ
 from pbcore.io import CmpH5Reader
 
-def brute_force_lm_search(vec, val):
-    if (val not in vec):
-        nvec = vec[ vec < val ]
-        if (len(nvec) == 0):
-            return(0)
-        val = max(nvec)
-    for i in range(0, len(vec)):
-        if (vec[i] == val):
-            break
-    return(i) 
-
-def brute_force_rm_search(vec, val):
-    if (val not in vec):
-        nvec = vec[ vec > val ]
-        if (len(nvec) == 0):
-            return(len(vec))
-        val = min(nvec)
-        return(bisect.bisect_left(vec, val))
-    else:
-        return(bisect.bisect_right(vec, val) - 1)
-
 def brute_force_number_in_range(s, e, vec):
     return(len(filter(lambda x : s <= x < e, vec)))
 
@@ -82,21 +61,6 @@ class TestCmpH5Format:
         cmpH5_format = CS.CmpH5Format(h.File(data.getCmpH5()['cmph5'],"r"))
         assert_equal(cmpH5_format.ALN_INFO, 'AlnInfo')
 
-class TestRightmostBinSearch:
-    def test_rightmost_bin_search(self):
-        for j in range(0, 100):
-            a = sort(random.randint(0, 100, 100))
-            v = random.randint(0, 100, 1)
-            assert_equal(RQ.rightmostBinSearch(a, v), brute_force_rm_search(a, v))
-
-class TestLeftmostBinSearch:
-    def test_leftmost_bin_search(self):
-        for j in range(0, 100):
-            a = sort(random.randint(0, 100, 100))
-            v = random.randint(0, 100, 1)
-            assert_equal(RQ.leftmostBinSearch(a, v), 
-                         brute_force_lm_search(a, v))
-
 class TestNumberWithinRange:
     def test_number_within_range(self):
         for j in range(0, 100):
@@ -138,12 +102,6 @@ class TestGetOverlappingRanges:
                     y = brute_force_search(aArray[:,0], aArray[:,1], aArray[:,2], aArray[:,3], s, s + e)
                     assert(all(sort(x) == sort(y)))
 
-class TestProjectIntoRange:
-    def test_project_into_range(self):
-        tStart = array([1,1,1,1,1,2,2,2,2,10,20])
-        tEnd   = array([2,3,4,5,6,3,4,5,6,15,25])
-        assert_equal(True, all(RQ.projectIntoRange(tStart, tEnd, 1, 5) == array([5, 8, 6, 4, 2])))
-        assert_equal(True, all(RQ.projectIntoRange(tStart, tEnd, 20, 25) == array([1, 1, 1, 1, 1, 0])))
 
 class TestGetReadsInRange:
     def __init__(self):
@@ -155,11 +113,5 @@ class TestGetReadsInRange:
             a = sort(random.randint(0, 100, 100))
             s,e = sort(random.randint(0, 100, 2))
             assert_equal(CS.numberWithinRange(s,e,a),  brute_force_number_in_range(s,e,a))
-
-    def test_get_reads_in_range_2(self):
-        assert(len(RQ.getReadsInRange(self.cmpH5, (1, 0, 100000), justIndices = True)) == 84)
-        
-    def test_get_coverage_in_range(self):
-        assert(all(RQ.getCoverageInRange(self.cmpH5, (1, 0, 100)) == 2))
        
 
