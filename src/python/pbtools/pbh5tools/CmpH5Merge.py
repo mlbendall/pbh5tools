@@ -84,7 +84,8 @@ def processMovies(outCmp, inCmps, fmt):
 
 def makeOrAppend(outCmp, dsName, newDta, chunks = True):
     if not dsName in outCmp:
-        outCmp.create_dataset(dsName, data = newDta, chunks = chunks)
+        outCmp.create_dataset(dsName, data = newDta, chunks = chunks,
+                              maxshape = tuple([None for x in newDta.shape]))
     else:
         d = outCmp[dsName]
         e = d.shape[0]
