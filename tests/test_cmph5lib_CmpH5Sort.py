@@ -98,8 +98,11 @@ class TestGetOverlappingRanges:
                     aArray = hstack((ar, idx))
                     s = random.randint(0, i, 1)
                     e = int(1 + random.exponential(30, 1))
-                    x = RQ.getOverlappingRanges(aArray[:,0], aArray[:,1], aArray[:,2], aArray[:,3], s, s + e)
-                    y = brute_force_search(aArray[:,0], aArray[:,1], aArray[:,2], aArray[:,3], s, s + e)
+                    x = RQ.getOverlappingRanges(aArray[:,0], aArray[:,1], 
+                                                aArray[:,2], aArray[:,3], s, 
+                                                s + e + 1)
+                    y = brute_force_search(aArray[:,0], aArray[:,1], aArray[:,2], 
+                                           aArray[:,3], s, s + e)
                     assert(all(sort(x) == sort(y)))
 
 
