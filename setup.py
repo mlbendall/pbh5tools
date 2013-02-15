@@ -23,6 +23,7 @@ setup(
     install_requires=[
         'pbcore >= 0.1',
         'numpy >= 1.6.0',
+        'matplotlib >= 1.0.1',
         'h5py >= 1.3.0'
         ]
     )
