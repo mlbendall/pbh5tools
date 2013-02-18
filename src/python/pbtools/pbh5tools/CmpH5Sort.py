@@ -493,13 +493,25 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
             cH5.close()
             del cH5
             if success:
-                ## XXX: This whole block we need to refactor.
+                ## TODO: Provide some high-level abstraction for
+                ## minimal cmp.h5 writing/modifying in pbcore.  For
+                ## now, we are calling into raw h5py.
                 try:
-                    from pbcore.io.cmph5 import factory
-                    cmpH5 = factory.create(outFile, 'a')
-                    cmpH5.log('CmpH5Sort.py',  __VERSION__, str(datetime.datetime.now()),
-                              ' '.join([_inFile, outFile]), 'Sorting')
-                    cmpH5.close()
+                    with H5.File(outFile, "a") as cmpH5:
+                        fileLog = cmpH5["/FileLog"]
+                        numFileLogEntries = len(fileLog["ID"])
+                        newId = max(fileLog["ID"]) + 1
+                        updates = dict(Program     = "cmph5tools.py sort",
+                                       Version     = __VERSION__,
+                                       Timestamp   = str(datetime.datetime.now()),
+                                       CommandLine = " ".join([_inFile, outFile]),
+                                       Log         = "Sorting",
+                                       ID          = newId)
+
+                        for k, v in updates.iteritems():
+                            fileLog[k].resize(numFileLogEntries + 1, axis=0)
+                            fileLog[k][numFileLogEntries] = v
+
                 except Exception, E:
                     logging.warn("Unable to add information to cmpH5 FileInfo table.")
                     logging.warn(E)
@@ -510,7 +522,3 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
                     fout.close()
         except Exception as e:
              raise PBH5ToolsException("sort", str(e))
-
-
-
-
