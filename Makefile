@@ -21,6 +21,12 @@ test:
 	find tests/cram -name "*.t" | xargs cram 
 doc:
 	sphinx-apidoc -T -f -o doc src/ && cd doc && make html
+	pandoc -s -S -i -t slidy --mathjax doc/examples.md -o doc/examples.html
+
+examples:
+	cram doc/examples.t
+	sed 's/^  /    /' doc/examples.t > doc/examples.md
+	pandoc -s -S -i -t slidy --mathjax doc/examples.md -o doc/examples.html
 
 doc-clean:
 	cd doc && rm -rf modules.rst pbtools.* bash5lib.* cmph5tools.* \

@@ -41,8 +41,6 @@ from pbtools.pbh5tools.CmpH5Format import CmpH5Format
 
 import pbcore.io.rangeQueries as RQ
 
-__VERSION__ = ".75"
-
 def numberWithinRange(s, e, vec):
     """
     Compute the number of elements in vec (where vec is sorted), such
@@ -491,34 +489,13 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
     finally:
         try:
             cH5.close()
-            del cH5
-            if success:
-                ## TODO: Provide some high-level abstraction for
-                ## minimal cmp.h5 writing/modifying in pbcore.  For
-                ## now, we are calling into raw h5py.
-                try:
-                    with H5.File(outFile, "a") as cmpH5:
-                        fileLog = cmpH5["/FileLog"]
-                        numFileLogEntries = len(fileLog["ID"])
-                        newId = max(fileLog["ID"]) + 1
-                        updates = dict(Program     = "cmph5tools.py sort",
-                                       Version     = __VERSION__,
-                                       Timestamp   = str(datetime.datetime.now()),
-                                       CommandLine = " ".join([_inFile, outFile]),
-                                       Log         = "Sorting",
-                                       ID          = newId)
-
-                        for k, v in updates.iteritems():
-                            fileLog[k].resize(numFileLogEntries + 1, axis=0)
-                            fileLog[k][numFileLogEntries] = v
-
-                except Exception, E:
-                    logging.warn("Unable to add information to cmpH5 FileInfo table.")
-                    logging.warn(E)
-
-                if fout:
-                    logging.info("Overwriting input cmpH5 file.")
-                    shutil.copyfile(_inFile, inFile)
-                    fout.close()
+            if success and fout:
+                logging.info("Overwriting input cmpH5 file.")
+                shutil.copyfile(_inFile, inFile)
+                fout.close()
         except Exception as e:
              raise PBH5ToolsException("sort", str(e))
+
+
+
+

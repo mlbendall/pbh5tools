@@ -72,4 +72,3 @@ def copyDataset(absDsName, inCmp, outCmp, selection = None,
     
     return outDs
 
-# from IPython.Shell import IPShellEmbed; IPShellEmbed(argv=[])()

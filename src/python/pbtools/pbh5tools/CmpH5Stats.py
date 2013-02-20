@@ -29,27 +29,31 @@
 import numpy as NP
 import sys
 
-from matplotlib.mlab import rec2csv
+from matplotlib.mlab import rec2csv, rec2txt
 from pbtools.pbh5tools.Metrics import *
 
 def prettyPrint(res):
-    # from IPython import embed; embed()
+    print rec2txt(res, padding = 10, precision = 2)
 
-    def formatElt(x):
-        if isinstance(x, float):
-            r = str(round(x, 2))
-        else:
-            r = str(x)
-        return r
+    # def formatElt(x):
+    #     if isinstance(x, float):
+    #         r = str(round(x, 2))
+    #     else:
+    #         r = str(x)
+    #     return r
     
-    names  = [str(n) for n in res.dtype.names]
-    header = "\t".join(names)
-    print header
-    print "".join(['-'] * (sum(map(len, names)) + 
-                           6*(len(names) - 1)))
-    for i in xrange(0, res.shape[0]):
-        rec = res[i,]
-        print "\t".join([formatElt(x) for x in rec])
+    # names  = [str(n) for n in res.dtype.names]
+    # header = "\t".join(names)
+    # print header
+    # print "".join(['-'] * (sum(map(len, names)) + 
+    #                        6*(len(names) - 1)))
+    # if res.shape:
+    #     for i in xrange(0, res.shape[0]):
+    #         rec = res[i,]
+    #         print "\t".join([formatElt(x) for x in rec])
+    # else:
+    #     print "\t".join([formatElt(res[n]) for n in res.dtype.names])
+            
     
 
 def cmpH5Stats(cmpH5Filename, whatStr = None, whereStr = None, 
@@ -73,7 +77,9 @@ def cmpH5Stats(cmpH5Filename, whatStr = None, whereStr = None,
     else:
         tbl = what 
 
-    res = toRecArray(query(reader, tbl, where, groupBy))
+    # from IPython import embed; embed()
+    res = query(reader, tbl, where, groupBy)
+    res = toRecArray(res)
     
     if not outFile:
         prettyPrint(res)

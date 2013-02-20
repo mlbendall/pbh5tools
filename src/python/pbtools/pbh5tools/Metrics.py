@@ -30,6 +30,8 @@ import sys
 import os
 import h5py
 import numpy as NP
+import inspect
+import re
 
 from pbcore.io import CmpH5Reader
 
@@ -130,7 +132,58 @@ class Flatten(Expr):
         else:
             return r
 
+def processClass(cls, name, bases, dct):
+    ignoreRes = ['^Default', '^Metric$', '^Statistic$', '^Factor$']
+
+    if not any(map(lambda x : re.match(x, name), ignoreRes)):
+        if '__init__' in dct:
+            # if it has an init it takes arguments which define the
+            # metric.
+            f = dct['__init__']
+            a = inspect.getargspec(f)
+            # argspec = '[' + ",".join([ str(a) + ' = ' + str(b) for 
+            #                            a,b in zip(a.args[-1], a.defaults) ]) + ']'
+            argspec = '[' + str(a.args[-1]) + ']'
+            myName  = name
+        else:
+            myName  = re.sub('^_', '', name)
+            argspec = ''
+            
+        if '__doc__' in dct:
+            docstr = dct['__doc__']
+        else:
+            docstr = ''
+        
+        return myName + argspec + ('\n\t' + docstr if 
+                                   docstr else docstr)
+    else:
+        return None
+
+
+class DocumentedMetric(type):
+    Metrics = []
+    def __new__(cls, name, bases, dct):
+        DocumentedMetric.Metrics.append(processClass(cls, name, 
+                                                     bases, dct))
+        return type.__new__(cls, name, bases, dct)
+
+    @staticmethod
+    def list():
+        return filter(lambda x : x, DocumentedMetric.Metrics)
+
+class DocumentedStatistic(type):
+    Statistics = []
+    def __new__(cls, name, bases, dct):
+        DocumentedStatistic.Statistics.append(processClass(cls, name, 
+                                                           bases, dct))
+        return type.__new__(cls, name, bases, dct)
+
+    @staticmethod
+    def list():
+        return filter(lambda x : x, DocumentedStatistic.Statistics)
+
 class Statistic(Expr):
+    __metaclass__ = DocumentedStatistic
     def __init__(self, metric):
         self.metric = metric
 
@@ -139,14 +192,15 @@ class Statistic(Expr):
         if isinstance(r, (list, tuple)):
             return NP.array([self.f(rr) for rr in r])
         else:
-            return self.f(r)
+            e = self.f(r)
+            return e if isinstance(e, NP.ndarray) else NP.array([e])
 
 class Metric(Expr):
-    def __init__(self):
-        self.r = None
+    __metaclass__ = DocumentedMetric
+
     def eval(self, cmpH5, idx):
         return self.produce(cmpH5, idx)
-
+        
 class Factor(Metric):
     def __rmul__(self, other):
         return BinOp(other, self, ':')
@@ -162,7 +216,6 @@ class Tbl(object):
             yield (a, self.cols[a])
     def eval(self, cmpH5, idx):
         return [(a, self.cols[a].eval(cmpH5, idx)) for a in self.cols.keys()]
-
 
 def split(x, f):
     # I'm thinking it is faster to do the allocation of the NP array
@@ -181,20 +234,41 @@ def split(x, f):
 
 
 def toRecArray(res):
-    recArrays = []
-    for k in res.keys():
-        elt = res[k]
-        nameAndType = [(n[0], n[1].dtype) for n in elt]
+    def myDtype(x):
+        if 'dtype' in dir(x):
+            return x.dtype
+        else:
+            return type(x)
+    def myLen(x):
+        if isinstance(x, NP.ndarray):
+            return len(x)
+        else:
+            return 1
+
+    def expand(groupName, seq):
+        return NP.array([groupName]*myLen(seq))
+
+    def convertToRecArray(elt, groupName = None):
+        nat = [(n[0], myDtype(n[1])) for n in elt]
         dta = [n[1] for n in elt]
-        if isinstance(k, str):
-            if isinstance(dta[0], NP.ndarray): 
-                groupNames = NP.array([k] * len(dta[0]))
-            else:
-                groupNames = k
-            nameAndType.insert(0, ('Group', object))
-            dta.insert(0, groupNames)
-        recArrays.append(NP.rec.array(dta, dtype = nameAndType))
-    return NP.hstack(recArrays)
+        if groupName:
+            nat.insert(0, ('Group', object))
+            dta.insert(0, expand(groupName, dta[0]))
+        return NP.rec.array(dta, dtype = nat)
+
+    if DefaultGroupBy.word() in res:
+        return convertToRecArray(res[DefaultGroupBy.word()])
+    else:
+        recArrays = []
+        for k in res.keys():
+            recArrays.append(convertToRecArray(res[k], k))
+        v = NP.hstack(recArrays)
+
+        # XXX : augmenting with a sortBy clause would make sense. 
+        if 'Group' in v.dtype.names:
+            return v[NP.argsort(v['Group']),]
+        else:
+            return v
 
 # Stats 
 class Mean(Statistic):
@@ -207,15 +281,23 @@ class Median(Statistic):
 
 class Count(Statistic):
     def f(self, x):
-        return NP.array([len(x)])
+        return len(x)
 
-class Q(Statistic):
-    def __init__(self, metric, qtile = 95.0):
-        super(Q, self).__init__(metric)
-        self.qtile = qtile
+class Percentile(Statistic):
+    def __init__(self, metric, ptile = 95.0):
+        super(Percentile, self).__init__(metric)
+        self.ptile = ptile
 
     def f(self, x):
-        return NP.percentile(x[~NP.isnan(x)], self.qtile)
+        return NP.percentile(x[~NP.isnan(x)], self.ptile)
+
+class Round(Statistic):
+    def __init__(self, metric, digits = 0):
+        super(Round, self).__init__(metric)
+        self.digits = digits
+    def f(self, x):
+        return NP.around(x, self.digits)
+
 
 # Metrics
 class DefaultWhere(Metric):
@@ -223,10 +305,15 @@ class DefaultWhere(Metric):
         return NP.ones(len(idx), dtype = bool)
 
 class DefaultGroupBy(Metric):
+    @staticmethod
+    def word():
+        return 'DefaultGroupBy'
+
     def produce(self, cmpH5, idx):
-        return NP.ones(len(idx), dtype = bool)
+        return NP.array([DefaultGroupBy.word()] * len(idx))
 
 class _TemplateSpan(Metric):
+    """The number of template bases covered by the read"""
     def produce(self, cmpH5, idx):
         return (cmpH5.tEnd[idx] - cmpH5.tStart[idx])
 
@@ -300,7 +387,17 @@ class _AlignmentIdx(Factor):
 
 class _Barcode(Factor):
     def produce(self, cmpH5, idx):
-        return NP.array([ cmpH5[i].barcode for i in idx ])
+        return NP.array([cmpH5[i].barcode for i in idx])
+
+class SubSample(Metric):
+    """boolean vector with true occuring at rate rate"""
+    def __init__(self, rate = 1):
+        self.rate = rate
+
+    def produce(self, cmpH5, idx):
+        return NP.array(NP.random.binomial(1, self.rate, len(idx)),
+                        dtype = bool)
+
 
 ###############################################################################
 ##
@@ -331,10 +428,10 @@ ReadEnd             = _ReadEnd()
 ReadStart           = _ReadStart()
 Barcode             = _Barcode()
 
-
 def query(reader, what = DefaultWhat, where = DefaultWhere(), 
           groupBy = DefaultGroupBy()):
     idxs = NP.where(where.eval(reader, range(0, len(reader))))[0]
     groupBy = groupBy.eval(reader, idxs)
+
     return { k:what.eval(reader, v) for k,v in 
              split(idxs, groupBy).items() }

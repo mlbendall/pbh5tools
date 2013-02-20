@@ -3,12 +3,22 @@ from setuptools import setup, Extension, find_packages
 import os
 import sys
 
-#if os.system("make -C src/C all"):
-#    sys.exit(1)
+vFile = 'src/python/pbtools/pbh5tools/_version.py'
+
+if os.path.exists(vFile):
+    lines = open(vFile, 'r').read().splitlines()
+    for line in lines:
+        elts = line.split('=')
+        elts = [e.strip() for e in elts]
+        if len(elts) == 2 and elts[0] == '__version__':
+            _ReadVersion = elts[1].replace('\'', '').replace('\"', '')
+            break
+else:
+    _ReadVersion = '0.0.0'
 
 setup(
     name = 'pbtools.pbh5tools',
-    version='0.4.0',
+    version=_ReadVersion,
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license='LICENSE.txt',
@@ -17,8 +27,8 @@ setup(
     packages = find_packages('src/python'),  
     package_dir = {'':'src/python'},
     namespace_packages = ['pbtools'],
-    #data_files = [('pbtools/pbh5tools', ['src/C/build/ci.so'])],
-    ext_modules=[Extension('pbtools/pbh5tools/ci', ['src/C/ci.c'], extra_compile_args=["-O3","-shared"])], 
+    ext_modules=[Extension('pbtools/pbh5tools/ci', ['src/C/ci.c'], 
+                           extra_compile_args=["-O3","-shared"])], 
     zip_safe = False,
     install_requires=[
         'pbcore >= 0.1',

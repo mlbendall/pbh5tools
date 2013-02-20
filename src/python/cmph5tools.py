@@ -43,9 +43,9 @@ from pbtools.pbh5tools.CmpH5Select import cmpH5Select
 from pbtools.pbh5tools.CmpH5Merge import cmpH5Merge
 from pbtools.pbh5tools.CmpH5Sort import cmpH5Sort
 from pbtools.pbh5tools.CmpH5Stats import cmpH5Stats
-from pbtools.pbh5tools.CmpH5Compare import cmpH5Equal, cmpH5Summarize
-
-__version__ = "0.4.0"
+from pbtools.pbh5tools.CmpH5Compare import cmpH5Equal, cmpH5Summarize, cmpH5Validate
+from pbtools.pbh5tools.Metrics import DocumentedMetric,DocumentedStatistic
+from pbtools.pbh5tools._version import __version__
 
 class CmpH5ToolsRunner(PBMultiToolRunner):
     def __init__(self):
@@ -150,6 +150,25 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         parser.add_argument('inCmp', metavar='input.cmp.h5',
                                   help='input filename')
         
+        # metrics
+        desc = ['List the available Metrics and Statistics for use in the query API']
+        parser = subparsers.add_parser('metrics',
+                                       help = 'List metrics and statistics',
+                                       description = '\n'.join(desc),
+                                       parents = [self.parser])
+        parser.add_argument('--json', default = False, action = 'store_true',
+                            help = 'Should output be in JSON format')
+
+        # valid 
+        desc = ['Validate a cmp.h5 file']
+        parser = subparsers.add_parser('validate',
+                                       help = 'Validate input.cmp.h5',
+                                       description = '\n'.join(desc),
+                                       parents = [self.parser])
+        parser.add_argument('inCmp', metavar = 'input.cmp.h5',
+                            help = 'input filename')
+        
+        
     def getVersion(self):
         return __version__
     
@@ -174,16 +193,25 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
             elif cmd == 'equal':
                 res = cmpH5Equal(self.args.inCmp1, self.args.inCmp2)
             elif cmd == 'summarize':
-                # XXX : what should this guy do?
                 for inCmp in self.args.inCmps:
                     print "".join(["-"] * 40)
                     print cmpH5Summarize(inCmp)
+            elif cmd == 'metrics':
+                print '\t\t--- Metrics ---'
+                print "\n".join(DocumentedMetric.list())
+                print '\n\t\t--- Statistics ---'
+                print "\n".join(DocumentedStatistic.list())
+            elif cmd == 'validate':
+                print cmpH5Validate(self.args.inCmp)
             else:
                 raise PBH5ToolsException("NA", "Unkown command passed to cmph5tools.py:" + 
                                          self.args.subName)
+            
+            return True
         except PBH5ToolsException as pbe:
             logging.exception(pbe) 
-            sys.exit(1) 
+            return False
 
 if __name__ == '__main__':    
     sys.exit(CmpH5ToolsRunner().start())
+    

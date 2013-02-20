@@ -66,5 +66,13 @@ def cmpH5Summarize(inCmp):
                     NP.round(NP.mean(rl)), NP.round(NP.mean(acc), 4)))
 
 
+def cmpH5Validate(inCmp):
+    """Validate a cmp.h5 file"""
+    try:
+        reader = CmpH5Reader(inCmp)
+        return True
+    except:
+        return False
+    
     
     
