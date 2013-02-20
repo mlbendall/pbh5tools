@@ -9,7 +9,7 @@ relevant clauses are: `what`, `where`, and `groupBy`.
 
 ## Example 1: produce a sub-sampled cmp.h5 file
 
-  $ export INCMP=$HOME/projects/software/bioinformatics/tools/pbh5tools/etc/aligned_reads_ss.cmp.h5
+  $ export INCMP=$TESTDIR/../etc/aligned_reads_ss.cmp.h5
 
 take 50% of the reads 
 

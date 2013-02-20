@@ -26,8 +26,11 @@ doc:
 examples:
 	cram doc/examples.t
 	sed 's/^  /    /' doc/examples.t > doc/examples.md
-	pandoc -s -S -i -t slidy --mathjax doc/examples.md -o doc/examples.html
+	pandoc doc/examples.md -o doc/examples.html
 
+example-slides: examples
+	pandoc -s -S -i -t slidy --mathjax doc/examples.md -o doc/example-slides.html
+	
 doc-clean:
 	cd doc && rm -rf modules.rst pbtools.* bash5lib.* cmph5tools.* \
 	bash5tools.* _templates _static _build searchindex.js objects.inv
