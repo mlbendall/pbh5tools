@@ -83,9 +83,11 @@ class TestComputeIndicesDP:
 
 class TestComputeRefIndexTable:
     def test_compute_ref_index_table(self):
-        refIDs = [1,1,1,1,1,2,2,2,2,2,1,1,1,1,5]
-        tbl    = CS.computeRefIndexTable(array([1,2,3,4,5]), array(refIDs))
-        utbl   = [ 1,  0,  9,  2,  9, 14, 3, 14, 14, 4, 14, 14, 5, 14, 15]
+        refIDs = [5,1,1,1,1,1,1,1,1,1,2,2,2,2,2]
+        tbl    = CS.computeRefIndexTable(array(refIDs))
+        utbl   = [ 5, 0, 1,
+                   1, 1, 10,
+                   2, 10, 15 ]
         assert_equal(sum(tbl.ravel() == utbl), len(utbl))
 
 class TestGetOverlappingRanges:

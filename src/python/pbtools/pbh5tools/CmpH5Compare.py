@@ -43,13 +43,13 @@ def cmpH5Equal(inCmp1, inCmp2):
     cmp2 = CmpH5Reader(inCmp2)
 
     if not len(cmp1) == len(cmp2):
-        raise PBH5ToolsException('equal', "Alignment Indices differ in length: (%d, %d)" % \
-                                     (len(cmp1), len(cmp2)))
+        return (False, "cmp.h5 files differ in length (%d, %d)" % 
+                (len(cmp1), len(cmp2)))
         
     aeq = [ a1 == a2 for a1,a2 in zip(cmp1, cmp2) ]
     if not all(aeq):
-        raise PBH5ToolsException('equal', "%d alignments differ" % \
-                                     sum(map(lambda x : 1 if x else 0, aeq)))
+        return (False, "%d alignments differ" %  (len(aeq)-sum(aeq)))
+               
     return True
 
 def cmpH5Summarize(inCmp):

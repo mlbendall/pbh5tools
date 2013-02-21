@@ -191,7 +191,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                 cmpH5Stats(self.args.inCmp, self.args.what, self.args.where, 
                            self.args.groupBy, self.args.outCsv)
             elif cmd == 'equal':
-                res = cmpH5Equal(self.args.inCmp1, self.args.inCmp2)
+                print cmpH5Equal(self.args.inCmp1, self.args.inCmp2)
             elif cmd == 'summarize':
                 for inCmp in self.args.inCmps:
                     print "".join(["-"] * 40)

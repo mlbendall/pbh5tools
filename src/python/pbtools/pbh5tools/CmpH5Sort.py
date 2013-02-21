@@ -119,28 +119,24 @@ def computeIndicesDP(tStart, tEnd):
     return(res)
 
 
-def computeRefIndexTable(refIDs, refIDVector):
+def computeRefIndexTable(refIDVector):
     """
-    Compute a table of offsets for refID given the unique refIDs in
-    the file.
+    Compute a table of offsets for refIDVector; refIDVector must be
+    `blocked`, i.e., 1,1,2 and 2,1,1 are okay, but 1,2,1 is not. A
+    sorted refIDVector accomplishes this.
     """
-    def table(vector, bins):
-        counts = dict(zip(bins, [0]*len(bins)))
-        for i in xrange(0, len(vector)):
-            counts[vector[i]]+= 1
-        return counts
-
-    ## XXX: In practice, these should already be sorted, but they
-    ## might not be on occassion. In that case, you get the offset
-    ## structure out of sync with the AlnIndex. The trick is to do it
-    ## sorted and then to unsort it. Bug 20878
-    rperm = NP.argsort(refIDs)
-    rcnts = table(refIDVector, refIDs[rperm]).values()
-    rsums = NP.cumsum(rcnts)
-    offsetStart = NP.concatenate((NP.array([0]), rsums[:-1]))
-    offsets = NP.array(zip(refIDs[rperm], offsetStart, rsums), dtype = "uint32")
-    offsets = offsets[NP.array(range(0, offsets.shape[0]))[NP.argsort(rperm)],:]
-    assert(all(offsets[:,0] == refIDs))
+    offsets = NP.zeros(shape = (len(NP.unique(refIDVector)), 3),
+                       dtype = "uint32")
+    row = 0
+    offsets[row,] = refIDVector[0], 0, 1
+    for ID in refIDVector[1:]:
+        if ID == offsets[row, 0]:
+            offsets[row, 2] += 1
+        else:
+            row += 1
+            offsets[row, 0] = ID
+            offsets[row, 1] = offsets[row - 1, 2] 
+            offsets[row, 2] = offsets[row - 1, 2] + 1
     return offsets
 
 def __pathExists(h5, path):
@@ -180,8 +176,9 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
                               [cH5[readGroupPaths.values()[0]][z].dtype 
                                for z in uPulseDatasets]))
     
-    ## XXX : this needs to be augmented with some saftey on not loading too much data.
-    ##       - set a bound on the number of elts in the cache.
+    ## XXX : this needs to be augmented with some saftey on not
+    ## loading too much data.  - set a bound on the number of elts in
+    ## the cache.
     pdsCache = {}
 
     def getData(read, ds, start, end):
@@ -219,7 +216,8 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
     refGroupAlnGroups = []
 
     for row in xrange(0, offsets.shape[0]):
-        logging.info("Processing reference: %d of %d" % (row + 1, offsets.shape[0]))
+        logging.info("Processing reference: %d of %d" % 
+                     (row + 1, offsets.shape[0]))
 
         groupID = offsets[row, 0]
         fRow = offsets[row, 1]
@@ -288,7 +286,8 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
                   currentStart = gEnd + 1
 
              ## now write it back; have to map back into the global coord system.
-             sAI[(fRow + readBlock[0]):(fRow + readBlock[1]),] = reads[readBlock[0]:readBlock[1],]
+             sAI[(fRow + readBlock[0]):(fRow + readBlock[1]),] = \
+                 reads[readBlock[0]:readBlock[1],]
 
              ## increment the currentAlnID
              currentAlnID = currentAlnID + 1
@@ -304,8 +303,10 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
     logging.info("Writing new AlnGroupPath values.")
     del(cH5[format.ALN_GROUP_PATH])
     del(cH5[format.ALN_GROUP_ID])
-    cH5.create_dataset(format.ALN_GROUP_PATH, data = map(str, refGroupAlnGroups), ## XXX : unicode.
-                       dtype = H5.special_dtype(vlen = str), maxshape = (None,), chunks = (256,))
+    cH5.create_dataset(format.ALN_GROUP_PATH, data = map(str, refGroupAlnGroups), 
+                       ## XXX : unicode.
+                       dtype = H5.special_dtype(vlen = str), maxshape = (None,), 
+                       chunks = (256,))
     cH5.create_dataset(format.ALN_GROUP_ID, data = range(1, currentAlnID),
                        dtype = "int32", maxshape = (None,), chunks = (256,))
     logging.info("Wrote new AlnGroupPath values.")
@@ -319,7 +320,8 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
               del(cH5[rg])
          else:
               logging.warn("Input cmp.h5 file is out of spec, duplicate " +
-                           "alignment group paths with different IDs (sorting is unaffected)")
+                           "alignment group paths with different IDs (sorting" + 
+                           "is unaffected)")
 
 
 def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True, 
@@ -351,9 +353,11 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
          shutil.copyfile(inFile, _inFile)
          outFile = _inFile
     else:
-         raise PBH5ToolsException("sort", "Improper call, must specify outFile, tmpDir, or inPlace must be True.")
+         raise PBH5ToolsException("sort", "Improper call, must specify outFile," + 
+                                  "tmpDir, or inPlace must be True.")
 
-    logging.info("Processing inFile: %s saving in outFile: %s" % (_inFile, outFile))
+    logging.info("Processing inFile: %s saving in outFile: %s" % 
+                 (_inFile, outFile))
 
 
     ## Setup the indexer.
@@ -385,23 +389,31 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
             success = True;
             return True;
 
-        # sort the AlignmentIndex
-        aord = NP.lexsort([aI[:,format.TARGET_END], aI[:,format.TARGET_START],
-                           aI[:,format.REF_ID]])
 
+        # bug 22557, REF_ID isn't a `stable` identifier, within the
+        # scope of a cmp.h5 file. We need to map format.REF_ID to its
+        # REF_INFO_ID which is stable over merge/sort/split
+        # operations.
+        refIdToInfoId = dict(zip(cH5[format.REF_GROUP_ID].value,
+                                 cH5[format.REF_GROUP_INFO_ID]))
+        refInfoIds = NP.array([refIdToInfoId[i] for i in aI[:,format.REF_ID]])
+        aord = NP.lexsort([aI[:,format.TARGET_END], aI[:,format.TARGET_START],
+                           refInfoIds])
+        
         assert(len(aord) == aI.shape[0])
 
         sAI = aI.value[aord,:]
-        del(aI)
+        del aI
         logging.info("Sorted AlignmentIndex.")
 
         # construct reference offset datastructure.
         refSeqIDs = cH5[format.REF_GROUP_ID]
-        offsets = computeRefIndexTable(refSeqIDs.value, sAI[:,format.REF_ID])
+        offsets = computeRefIndexTable(sAI[:,format.REF_ID])
         logging.info("Constructed offset datastructure.")
 
         # check that the offset data structure and the index are consistent.
-        assert(all([all(offsets[i,0] == sAI[offsets[i,1]:offsets[i,2],format.REF_ID])
+        assert(all([all(offsets[i,0] == sAI[offsets[i,1]:offsets[i,2],
+                                            format.REF_ID])
                     for i in range(0, offsets.shape[0])]))
 
         # fill overlap and back columns.
@@ -419,7 +431,8 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
         # modify the cmp.h5 file.
         # We want to keep the chunking info on the dataset.
         del(cH5[format.ALN_INDEX])
-        cH5.create_dataset(format.ALN_INDEX, data = sAI, dtype = H5.h5t.NATIVE_UINT32,
+        cH5.create_dataset(format.ALN_INDEX, data = sAI, 
+                           dtype = H5.h5t.NATIVE_UINT32,
                            maxshape = (None, None))
 
         ## If the file is already sorted there's no harm in resorting.
@@ -462,7 +475,8 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
                 originalAttrs = cH5[extraTable].attrs
                 originalDtype = cH5[extraTable].dtype
                 del(cH5[extraTable])
-                cH5.create_dataset(extraTable, data = eTable, dtype = originalDtype,
+                cH5.create_dataset(extraTable, data = eTable, 
+                                   dtype = originalDtype,
                                    maxshape = tuple([None for x in eTable.shape]))
                 logging.info("Sorted dataset: %s" % extraTable)
                 logging.info("Writing attributes")
@@ -475,7 +489,8 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
                      else:
                           newDtype = originalAttrs[k].dtype
 
-                     cH5[extraTable].attrs.create(k, originalAttrs[k], dtype = newDtype)
+                     cH5[extraTable].attrs.create(k, originalAttrs[k], 
+                                                  dtype = newDtype)
 
                 logging.info("Finished processing dataset: %s" % extraTable)
 
