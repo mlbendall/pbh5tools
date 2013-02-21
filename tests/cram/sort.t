@@ -17,5 +17,6 @@
   $ echo $?
   0
   $ cmph5tools.py equal tmp.cmp.h5 ptmp.cmp.h5
+  True
   $ echo $?
   0
