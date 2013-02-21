@@ -149,17 +149,17 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                             default = None)
         parser.add_argument('inCmp', metavar='input.cmp.h5',
                                   help='input filename')
-        
-        # metrics
-        desc = ['List the available Metrics and Statistics for use in the query API']
-        parser = subparsers.add_parser('metrics',
-                                       help = 'List metrics and statistics',
+
+        # listMetrics
+        desc = ["List available metrics and statistics for selection and stats."]
+        parser = subparsers.add_parser('listMetrics', 
+                                       help = "List available metrics",
                                        description = '\n'.join(desc),
                                        parents = [self.parser])
         parser.add_argument('--json', default = False, action = 'store_true',
                             help = 'Should output be in JSON format')
 
-        # valid 
+        # validate
         desc = ['Validate a cmp.h5 file']
         parser = subparsers.add_parser('validate',
                                        help = 'Validate input.cmp.h5',
@@ -177,40 +177,55 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         try: 
             if cmd == 'merge':
                 cmpH5Merge(self.args.inCmps, self.args.outCmp)
+
             elif cmd == 'sort':
                 cmpH5Sort(self.args.inCmp, self.args.outCmp, self.args.tmpdir, 
                           deep = self.args.deepsort, 
                           useNative = not self.args.usePythonIndexer,
                           inPlace = self.args.inPlace)
+
             elif cmd == 'select':
                 cmpH5Select(self.args.inCmp, self.args.outCmp, 
                             idxs = self.args.idxs, whereStr = self.args.where, 
                             groupByStr = self.args.groupBy,
                             outDir = self.args.outDir)
+
             elif cmd == 'stats':
                 cmpH5Stats(self.args.inCmp, self.args.what, self.args.where, 
                            self.args.groupBy, self.args.outCsv)
+
+            elif cmd == 'listMetrics':
+                print '--- Metrics:'
+                print "\t\n".join(DocumentedMetric.list())
+                print '\n--- Statistics:'
+                print "\t\n".join(DocumentedStatistic.list())
+
             elif cmd == 'equal':
-                print cmpH5Equal(self.args.inCmp1, self.args.inCmp2)
+                ret = cmpH5Equal(self.args.inCmp1, self.args.inCmp2)
+                if not ret[0]:
+                    print >> sys.stderr, ret[1]
+                    return 1
+                else:
+                    return 0
+
             elif cmd == 'summarize':
                 for inCmp in self.args.inCmps:
                     print "".join(["-"] * 40)
                     print cmpH5Summarize(inCmp)
-            elif cmd == 'metrics':
-                print '\t\t--- Metrics ---'
-                print "\n".join(DocumentedMetric.list())
-                print '\n\t\t--- Statistics ---'
-                print "\n".join(DocumentedStatistic.list())
+
             elif cmd == 'validate':
-                print cmpH5Validate(self.args.inCmp)
+                if cmpH5Validate(self.args.inCmp):
+                    return 0
+                else:
+                    return 1
             else:
-                raise PBH5ToolsException("NA", "Unkown command passed to cmph5tools.py:" + 
+                raise PBH5ToolsException("", "Unkown command passed to cmph5tools.py:" + 
                                          self.args.subName)
-            
-            return True
+            return 0
+
         except PBH5ToolsException as pbe:
             logging.exception(pbe) 
-            return False
+            return 1
 
 if __name__ == '__main__':    
     sys.exit(CmpH5ToolsRunner().start())

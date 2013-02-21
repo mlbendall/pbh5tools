@@ -9,23 +9,20 @@
   $ cmph5tools.py merge --outFile m2.cmp.h5 bc_28--bc_28.cmp.h5 \
   > bc_42--bc_42.cmp.h5
   $ cmph5tools.py equal m1.cmp.h5 m2.cmp.h5
-  (False, '40 alignments differ')
+  * alignments differ (glob)
+  [1]
   $ cmph5tools.py sort --inPlace m1.cmp.h5
   $ cmph5tools.py sort --inPlace m2.cmp.h5
   $ cmph5tools.py equal m1.cmp.h5 m2.cmp.h5
-  True
 
   $ cmph5tools.py select --where "SubSample(.05)" $INCMP \
   > --outFile ss.cmp.h5
   $ cmph5tools.py sort --outFile sss.cmp.h5 ss.cmp.h5
   $ cmph5tools.py equal sss.cmp.h5 ss.cmp.h5
-  (False, *) (glob)
+  * alignments differ (glob)
+  [1]
 
   $ cmph5tools.py validate sss.cmp.h5
-  True
   $ cmph5tools.py validate ss.cmp.h5
-  True
   $ cmph5tools.py validate m1.cmp.h5      
-  True
   $ cmph5tools.py validate m2.cmp.h5      
-  True

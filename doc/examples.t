@@ -34,36 +34,36 @@ take 50% of the reads
 
 ## Example 3: query the package to determine the available metrics and statistics
 
-  $ cmph5tools.py metrics
-  \t\t--- Metrics --- (esc)
+  $ cmph5tools.py listMetrics
+  --- Metrics:
   TemplateSpan
-  \tThe number of template bases covered by the read (esc)
-  ReadLength
-  NErrors
-  ReadDuration
-  FrameRate
-  IPD
-  PulseWidth
-  Movie
-  Reference
-  RefIdentifier
-  HoleNumber
-  ReadStart
-  ReadEnd
-  TemplateStart
-  TemplateEnd
-  MoleculeIdx
-  Strand
-  AlignmentIdx
-  Barcode
+  \tThe number of template bases covered by the read\t (esc)
+  ReadLength\t (esc)
+  NErrors\t (esc)
+  ReadDuration\t (esc)
+  FrameRate\t (esc)
+  IPD\t (esc)
+  PulseWidth\t (esc)
+  Movie\t (esc)
+  Reference\t (esc)
+  RefIdentifier\t (esc)
+  HoleNumber\t (esc)
+  ReadStart\t (esc)
+  ReadEnd\t (esc)
+  TemplateStart\t (esc)
+  TemplateEnd\t (esc)
+  MoleculeIdx\t (esc)
+  Strand\t (esc)
+  AlignmentIdx\t (esc)
+  Barcode\t (esc)
   SubSample[rate]
   \tboolean vector with true occuring at rate rate (esc)
   
-  \t\t--- Statistics --- (esc)
-  Mean
-  Median
-  Count
-  Percentile[ptile]
+  --- Statistics:
+  Mean\t (esc)
+  Median\t (esc)
+  Count\t (esc)
+  Percentile[ptile]\t (esc)
   Round[digits]
 
 ## Example 4: Familiar SQL-like syntax

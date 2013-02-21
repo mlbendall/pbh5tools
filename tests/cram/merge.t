@@ -14,7 +14,6 @@
   $ cmph5tools.py sort merged.cmp.h5
   $ cmph5tools.py sort tot.cmp.h5
   $ cmph5tools.py equal tot.cmp.h5 merged.cmp.h5
-  True
   $ echo $?
   0
   $ cmph5tools.py merge --outFile merged1.cmp.h5 $INH5
@@ -24,6 +23,5 @@
   $ echo $?
   0
   $ cmph5tools.py equal merged1.cmp.h5 $INH5
-  True
   $ echo $?       
   0

@@ -50,7 +50,7 @@ def cmpH5Equal(inCmp1, inCmp2):
     if not all(aeq):
         return (False, "%d alignments differ" %  (len(aeq)-sum(aeq)))
                
-    return True
+    return (True, )
 
 def cmpH5Summarize(inCmp):
     """Summarize a cmp.h5 file"""
