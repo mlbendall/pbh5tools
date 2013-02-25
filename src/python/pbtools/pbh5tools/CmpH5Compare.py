@@ -62,7 +62,7 @@ def cmpH5Summarize(inCmp):
     acc = [ r.accuracy for r in reader ] 
 
     return (tstr % (os.path.basename(reader.file.filename), reader.version, len(reader), 
-                    len(reader.referenceTable), len(reader.movieTable), NP.sum(rl),
+                    len(reader.referenceInfoTable), len(reader.movieTable), NP.sum(rl),
                     NP.round(NP.mean(rl)), NP.round(NP.mean(acc), 4)))
 
 
