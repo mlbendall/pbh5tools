@@ -343,8 +343,16 @@ class _PulseWidth(Metric):
     
 class _Movie(Factor):
     def produce(self, cmpH5, idx):
-        return NP.array([cmpH5[i].movieInfo['Name'] for i in idx])
-
+        mtb = cmpH5.movieTable
+        mapping = NP.zeros((NP.max([ i.ID for i in cmpH5.movieTable ]) + 1, ), dtype = object)
+        mapping[NP.array([ i.ID for i in cmpH5.movieTable ])] = \
+            NP.array([ i.Name for i in cmpH5.movieTable ])
+        return mapping[cmpH5.alignmentIndex.MovieID]
+        
+    # this is super slow
+    # def produce(self, cmpH5, idx):
+    #     return NP.array([cmpH5[i].movieInfo['Name'] for i in idx])
+    
 class _Reference(Factor):
     def produce(self, cmpH5, idx):
         return NP.array([cmpH5[i].referenceInfo['FullName'] for i in idx])
