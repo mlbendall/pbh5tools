@@ -16,13 +16,13 @@
   $ cmph5tools.py equal m1.cmp.h5 m2.cmp.h5
 
   $ cmph5tools.py select --where "SubSample(.05)" $INCMP \
-  > --outFile ss.cmp.h5
-  $ cmph5tools.py sort --outFile sss.cmp.h5 ss.cmp.h5
-  $ cmph5tools.py equal sss.cmp.h5 ss.cmp.h5
-  * alignments differ (glob)
+  > --outFile ss1.cmp.h5
+  $ cmph5tools.py select --where "SubSample(.10)" $INCMP \
+  > --outFile ss2.cmp.h5
+  $ cmph5tools.py equal ss1.cmp.h5 ss2.cmp.h5
+  cmp.h5 files differ in length* (glob)
   [1]
-
-  $ cmph5tools.py validate sss.cmp.h5
-  $ cmph5tools.py validate ss.cmp.h5
+  $ cmph5tools.py validate ss1.cmp.h5
+  $ cmph5tools.py validate ss2.cmp.h5
   $ cmph5tools.py validate m1.cmp.h5      
   $ cmph5tools.py validate m2.cmp.h5      

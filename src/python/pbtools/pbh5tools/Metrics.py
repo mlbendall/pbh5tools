@@ -230,7 +230,8 @@ def split(x, f):
         k = f[i]
         results[k][counts[k] - 1] = x[i]
         counts[k] -= 1
-    return results
+    # reverse it. 
+    return { k:v[::-1] for k,v in results.items() }
 
 
 def toRecArray(res):
@@ -342,17 +343,25 @@ class _PulseWidth(Metric):
         return [ cmpH5[i].PulseWidth() for i in idx ] 
     
 class _Movie(Factor):
-    def produce(self, cmpH5, idx):
-        mtb = cmpH5.movieTable
-        mapping = NP.zeros((NP.max([ i.ID for i in cmpH5.movieTable ]) + 1, ), dtype = object)
-        mapping[NP.array([ i.ID for i in cmpH5.movieTable ])] = \
-            NP.array([ i.Name for i in cmpH5.movieTable ])
-        return mapping[cmpH5.alignmentIndex.MovieID]
+    # def produce(self, cmpH5, idx):
+    #     mtb = cmpH5.movieInfoTable
+    #     mapping = NP.zeros((NP.max([ i.ID for i in mtb]) + 1, ), dtype = object)
+    #     mapping[NP.array([i.ID for i in mtb])] = \
+    #         NP.array([i.Name for i in mtb])
+    #     return mapping[cmpH5.alignmentIndex.MovieID]
         
     # this is super slow
-    # def produce(self, cmpH5, idx):
-    #     return NP.array([cmpH5[i].movieInfo['Name'] for i in idx])
-    
+    def produce(self, cmpH5, idx):
+        return NP.array([cmpH5[i].movieInfo['Name'] for i in idx])
+
+class _Movie2(Factor):
+    def produce(self, cmpH5, idx):
+        mtb = cmpH5.movieInfoTable
+        mapping = NP.zeros((NP.max([ i.ID for i in mtb]) + 1, ), dtype = object)
+        mapping[NP.array([i.ID for i in mtb])] = \
+            NP.array([i.Name for i in mtb])
+        return mapping[cmpH5.alignmentIndex.MovieID[idx]]
+
 class _Reference(Factor):
     def produce(self, cmpH5, idx):
         return NP.array([cmpH5[i].referenceInfo['FullName'] for i in idx])
@@ -422,7 +431,8 @@ IPD                 = _IPD()
 PulseWidth          = _PulseWidth()
 Accuracy            = 1.0 - NErrors/(ReadLength * 1.0)
 PolRate             = TemplateSpan/(ReadFrames/(FrameRate * 1.0))
-Movie               = _Movie()
+Movie               = _Movie2()
+MovieSlow           = _Movie()
 DefaultWhat         = Tbl(readLength = ReadLength, accuracy = Accuracy)
 Reference           = _Reference()
 RefIdentifier       = _RefIdentifier()

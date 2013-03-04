@@ -45,6 +45,7 @@ take 50% of the reads
   IPD\t (esc)
   PulseWidth\t (esc)
   Movie\t (esc)
+  Movie2\t (esc)
   Reference\t (esc)
   RefIdentifier\t (esc)
   HoleNumber\t (esc)
@@ -72,14 +73,14 @@ take 50% of the reads
   > --where "Barcode == 'bc_78--bc_78'" \
   > --groupBy Reference $INCMP
   Group                a          b
-  MET_600_t2_2      0.96          bc_78--bc_78          
-  MET_600_t2_2      0.82          bc_78--bc_78          
-  MET_600_t2_2      0.85          bc_78--bc_78          
-  MET_600_t2_2      0.89          bc_78--bc_78          
-  MET_600_t2_2      0.87          bc_78--bc_78          
-  MET_600_t2_2      0.90          bc_78--bc_78          
-  MET_600_t2_2      0.90          bc_78--bc_78          
   MET_600_t2_2      0.94          bc_78--bc_78          
+  MET_600_t2_2      0.90          bc_78--bc_78          
+  MET_600_t2_2      0.90          bc_78--bc_78          
+  MET_600_t2_2      0.87          bc_78--bc_78          
+  MET_600_t2_2      0.89          bc_78--bc_78          
+  MET_600_t2_2      0.85          bc_78--bc_78          
+  MET_600_t2_2      0.82          bc_78--bc_78          
+  MET_600_t2_2      0.96          bc_78--bc_78          
 
 ## Example 5: Familiar SQL-like functions
 
