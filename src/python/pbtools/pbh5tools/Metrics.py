@@ -32,6 +32,7 @@ import h5py
 import numpy as NP
 import inspect
 import re
+#from itertools import chain
 
 from pbcore.io import CmpH5Reader
 
@@ -195,6 +196,29 @@ class Statistic(Expr):
             e = self.f(r)
             return e if isinstance(e, NP.ndarray) else NP.array([e])
 
+class DefaultStat(Statistic):
+    def f(self, x):
+        return x
+
+class FactorStatistic(Expr):
+    __metaclass__ = DocumentedStatistic
+    def __init__(self, metric, factor, gfunc=DefaultStat):
+        self.metric = metric
+        self.factor = factor
+        self.gfunc  = gfunc(metric)
+    
+    def eval(self, cmpH5, idx):
+        r   = self.metric.eval(cmpH5, idx)
+        fr  = split(range(len(idx)), self.factor.eval(cmpH5, idx))
+        res = NP.zeros(len(idx), dtype=NP.int)
+        for v in fr.values():
+            res[v] = self.gfunc.f(r[v])        
+        return self.f(res)
+
+    def f(self, x):
+        return x
+        
+
 class Metric(Expr):
     __metaclass__ = DocumentedMetric
 
@@ -272,6 +296,18 @@ def toRecArray(res):
             return v
 
 # Stats 
+class Min(Statistic):
+    def f(self, x): 
+        return NP.min(x[~NP.isnan(x)])
+
+class Max(Statistic):
+    def f(self, x): 
+        return NP.max(x[~NP.isnan(x)])
+
+class Sum(Statistic):
+    def f(self, x): 
+        return NP.sum(x[~NP.isnan(x)])
+
 class Mean(Statistic):
     def f(self, x): 
         return NP.mean(x[~NP.isnan(x)])
@@ -290,7 +326,7 @@ class Percentile(Statistic):
         self.ptile = ptile
 
     def f(self, x):
-        return NP.percentile(x[~NP.isnan(x)], self.ptile)
+        return NP.percentile(x[~NP.isnan(x)], self.ptile)    
 
 class Round(Statistic):
     def __init__(self, metric, digits = 0):
@@ -298,6 +334,15 @@ class Round(Statistic):
         self.digits = digits
     def f(self, x):
         return NP.around(x, self.digits)
+    
+
+
+# Factor Statistic
+class DoByMolecule(FactorStatistic):
+    def __init__(self, metric, gfunc):
+        super(DoByMolecule, self).__init__(metric, MoleculeName, gfunc)
+        
+
 
 
 # Metrics
@@ -377,7 +422,7 @@ class _HoleNumber(Factor):
 class _ReadStart(Metric):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['rStart'][idx]
-
+    
 class _ReadEnd(Metric):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['rEnd'][idx]
@@ -390,10 +435,16 @@ class _TemplateEnd(Metric):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['tEnd'][idx]
 
-class _MoleculeIdx(Factor):
+class _MoleculeId(Factor):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['MoleculeID'][idx]
-
+    
+class _MoleculeName(Factor):
+    def produce(self, cmpH5, idx):
+        molecules = zip(cmpH5.alignmentIndex['MovieID'][idx], 
+                        cmpH5.alignmentIndex['HoleNumber'][idx])
+        return NP.array(['%s_%s' % (m,h) for m,h in molecules])
+        
 class _Strand(Factor):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['RCRefStrand'][idx]
@@ -439,12 +490,17 @@ RefIdentifier       = _RefIdentifier()
 HoleNumber          = _HoleNumber()
 AlignmentIdx        = _AlignmentIdx()
 Strand              = _Strand()
-MoleculeIdx         = _MoleculeIdx()
+MoleculeId          = _MoleculeId()
+MoleculeName        = _MoleculeName()
 TemplateEnd         = _TemplateEnd()
 TemplateStart       = _TemplateStart()
 ReadEnd             = _ReadEnd()
 ReadStart           = _ReadStart()
 Barcode             = _Barcode()
+MoleculeReadStart   = DoByMolecule(ReadStart, Min)
+MinSubreadLength    = DoByMolecule(ReadLength, Min)
+MaxSubreadLength    = DoByMolecule(ReadLength, Max)
+UnrolledReadLength  = DoByMolecule(ReadLength, Sum)
 
 def query(reader, what = DefaultWhat, where = DefaultWhere(), 
           groupBy = DefaultGroupBy()):
