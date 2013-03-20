@@ -16,7 +16,8 @@ two types of h5 files:
 ``pbh5tools`` is comprised of two executables: ``cmph5tools.py`` and
 ``bash5tools.py``. At the moment, the ``cmph5tools.py`` program
 provides a rich set of tools to manipulate and analyze the data in a
-``cmp.h5`` file.
+``cmp.h5`` file. The ``bash5tools.py`` provides mechanisms to extract
+basecall information from bas.h5 files. 
 
 ############
 Dependencies
@@ -154,16 +155,23 @@ Tool: cmph5tools.py
 the following subtools:
 
 1. **merge**: Merge multiple ``cmp.h5`` files into a single file.
+
 2. **sort**: Sort a ``cmp.h5`` file.
+
 3. **select**: Create a new file from a ``cmp.h5`` file by specifying
 which reads to include.
+
 4. **equal**: Compare the contents of 2 ``cmp.h5`` files for
 equivalence.
+
 5. **summarize**: Summarize the contents of a ``cmp.h5`` file in a
 verbose, human readable format.
+
 6. **stats**: Extract summary metrics from a ``cmp.h5`` file into a
 ``csv`` file.
+
 7. **valid**: Determine whether a ``cmp.h5`` file is valid.
+
 8. **listMetrics**: Emit the available metrics and statistics for use
 in the ``select`` and ``stats`` subcommands.
 
@@ -182,6 +190,8 @@ argument since this will provide progress information while the script
 is running via printing in stdout: ::
 
     cmph5tools.py <toolname> --info <other arguments>
+
+More examples are available in the examples.t file.
 
 * :ref:`genindex`
 * :ref:`modindex`
