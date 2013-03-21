@@ -29,7 +29,8 @@
 import numpy as NP
 import sys
 
-from matplotlib.mlab import rec2csv, rec2txt
+#from matplotlib.mlab import rec2csv, rec2txt
+from mlab import rec2csv, rec2txt
 from pbtools.pbh5tools.Metrics import *
 
 def prettyPrint(res):
