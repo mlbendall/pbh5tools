@@ -556,3 +556,11 @@
   443                     0.80
   204                     0.79
   153                     0.84
+  $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD))" --groupBy "Movie * Reference" --outFile out.csv
+  $ wc -l out.csv
+  85 out.csv
+  $ tail -n 1 out.csv
+  m110818_075520_42141_c100129202555500000315043109121112_s2_p0:lambda_NEB3011,182,0.15384615384615385,0.34183041080013737
+  $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD))" --groupBy "Movie * Reference" --where "Accuracy > .85" --outFile out.csv
+  $ wc -l out.csv
+  26 out.csv

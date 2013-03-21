@@ -53,7 +53,8 @@ take 50% of the reads
   ReadEnd\t (esc)
   TemplateStart\t (esc)
   TemplateEnd\t (esc)
-  MoleculeIdx\t (esc)
+  MoleculeId\t (esc)
+  MoleculeName\t (esc)
   Strand\t (esc)
   AlignmentIdx\t (esc)
   Barcode\t (esc)
@@ -61,11 +62,16 @@ take 50% of the reads
   \tboolean vector with true occuring at rate rate (esc)
   
   --- Statistics:
+  FactorStatistic[gfunc]\t (esc)
+  Min\t (esc)
+  Max\t (esc)
+  Sum\t (esc)
   Mean\t (esc)
   Median\t (esc)
   Count\t (esc)
   Percentile[ptile]\t (esc)
-  Round[digits]
+  Round[digits]\t (esc)
+  DoByMolecule[gfunc]
 
 ## Example 4: Familiar SQL-like syntax
 

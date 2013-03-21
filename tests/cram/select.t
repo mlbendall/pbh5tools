@@ -431,3 +431,7 @@
                            800
                            800
                            800
+
+  $ $CMD --what "UnrolledReadLength" --outFile out.csv
+  $ wc -l out.csv
+  85 out.csv

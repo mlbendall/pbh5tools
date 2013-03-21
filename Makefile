@@ -16,7 +16,7 @@ install:
 develop:
 	python setup.py develop
 
-test:
+test: examples
 	find tests -name "*.py" | xargs nosetests
 	find tests/cram -name "*.t" | xargs cram 
 doc:

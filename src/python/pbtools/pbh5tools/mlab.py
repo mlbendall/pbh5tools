@@ -16,9 +16,161 @@ A collection of helper methods for numpyrecord arrays
 
 """
 
-import csv, os
+import csv, os, copy
 import cbook
 import numpy as np
+
+# a series of classes for describing the format intentions of various rec views
+class FormatObj:
+    def tostr(self, x):
+        return self.toval(x)
+
+    def toval(self, x):
+        return str(x)
+
+    def fromstr(self, s):
+        return s
+
+
+    def __hash__(self):
+        """
+        override the hash function of any of the formatters, so that we don't
+        create duplicate excel format styles
+        """
+        return hash(self.__class__)
+
+class FormatString(FormatObj):
+    def tostr(self, x):
+        val = repr(x)
+        return val[1:-1]
+
+#class FormatString(FormatObj):
+# def tostr(self, x):
+# return '"%r"'%self.toval(x)
+
+
+
+class FormatFormatStr(FormatObj):
+    def __init__(self, fmt):
+        self.fmt = fmt
+
+    def tostr(self, x):
+        if x is None: return 'None'
+        return self.fmt%self.toval(x)
+
+
+
+
+class FormatFloat(FormatFormatStr):
+    def __init__(self, precision=4, scale=1.):
+        FormatFormatStr.__init__(self, '%%1.%df'%precision)
+        self.precision = precision
+        self.scale = scale
+
+    def __hash__(self):
+        return hash((self.__class__, self.precision, self.scale))
+
+    def toval(self, x):
+        if x is not None:
+            x = x * self.scale
+        return x
+
+    def fromstr(self, s):
+        return float(s)/self.scale
+
+
+class FormatInt(FormatObj):
+
+    def tostr(self, x):
+        return '%d'%int(x)
+
+    def toval(self, x):
+        return int(x)
+
+    def fromstr(self, s):
+        return int(s)
+
+class FormatBool(FormatObj):
+
+
+    def toval(self, x):
+        return str(x)
+
+    def fromstr(self, s):
+        return bool(s)
+
+class FormatPercent(FormatFloat):
+    def __init__(self, precision=4):
+        FormatFloat.__init__(self, precision, scale=100.)
+
+class FormatThousands(FormatFloat):
+    def __init__(self, precision=4):
+        FormatFloat.__init__(self, precision, scale=1e-3)
+
+
+class FormatMillions(FormatFloat):
+    def __init__(self, precision=4):
+        FormatFloat.__init__(self, precision, scale=1e-6)
+
+
+class FormatDate(FormatObj):
+    def __init__(self, fmt):
+        self.fmt = fmt
+
+    def __hash__(self):
+        return hash((self.__class__, self.fmt))
+
+
+    def toval(self, x):
+        if x is None: return 'None'
+        return x.strftime(self.fmt)
+
+    def fromstr(self, x):
+        import dateutil.parser
+        return dateutil.parser.parse(x).date()
+
+class FormatDatetime(FormatDate):
+    def __init__(self, fmt='%Y-%m-%d %H:%M:%S'):
+        FormatDate.__init__(self, fmt)
+
+    def fromstr(self, x):
+        import dateutil.parser
+        return dateutil.parser.parse(x)
+
+
+
+
+defaultformatd = {
+    np.bool_ : FormatBool(),
+    np.int16 : FormatInt(),
+    np.int32 : FormatInt(),
+    np.int64 : FormatInt(),
+    np.float32 : FormatFloat(),
+    np.float64 : FormatFloat(),
+    np.object_ : FormatObj(),
+    np.string_ : FormatString(),
+    }
+
+def get_formatd(r, formatd=None):
+    'build a formatd guaranteed to have a key for every dtype name'
+    if formatd is None:
+        formatd = dict()
+
+    for i, name in enumerate(r.dtype.names):
+        dt = r.dtype[name]
+        format = formatd.get(name)
+        if format is None:
+            format = defaultformatd.get(dt.type, FormatObj())
+        formatd[name] = format
+    return formatd
+
+def csvformat_factory(format):
+    format = copy.deepcopy(format)
+    if isinstance(format, FormatFloat):
+        format.scale = 1. # override scaling for storage
+        format.fmt = '%r'
+    return format
+
 
 def rec2csv(r, fname, delimiter=',', formatd=None, missing='',
             missingd=None, withheader=True):

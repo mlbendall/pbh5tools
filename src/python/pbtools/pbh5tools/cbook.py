@@ -1,7 +1,26 @@
+import numpy.ma as ma
+
+
 """
 A collection of utility functions and classes.  Many (but not all)
 from the Python Cookbook -- hence the name cbook
 """
+def is_string_like(obj):
+    'Return True if *obj* looks like a string'
+    if isinstance(obj, (str, unicode)):
+        return True
+    # numpy strings are subclass of str, ma strings are not
+    if ma.isMaskedArray(obj):
+        if obj.ndim == 0 and obj.dtype.kind in 'SU':
+            return True
+        else:
+            return False
+    try:
+        obj + ''
+    except:
+        return False
+    return True
+
 
 def to_filehandle(fname, flag='rU', return_opened=False):
     """
