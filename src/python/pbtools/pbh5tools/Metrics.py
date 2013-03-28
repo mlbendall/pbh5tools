@@ -32,10 +32,8 @@ import h5py
 import numpy as NP
 import inspect
 import re
-#from itertools import chain
 
 from pbcore.io import CmpH5Reader
-
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 
 def hasEval(thing):
@@ -134,7 +132,8 @@ class Flatten(Expr):
             return r
 
 def processClass(cls, name, bases, dct):
-    ignoreRes = ['^Default', '^Metric$', '^Statistic$', '^Factor$']
+    ignoreRes = ['^Default', '^Metric$', '^Statistic$', '^Factor$', 
+                 '^FactorStatistic']
 
     if not any(map(lambda x : re.match(x, name), ignoreRes)):
         if '__init__' in dct:
@@ -142,9 +141,10 @@ def processClass(cls, name, bases, dct):
             # metric.
             f = dct['__init__']
             a = inspect.getargspec(f)
-            # argspec = '[' + ",".join([ str(a) + ' = ' + str(b) for 
-            #                            a,b in zip(a.args[-1], a.defaults) ]) + ']'
-            argspec = '[' + str(a.args[-1]) + ']'
+            if len(a.args) > 1:
+                argspec = '[' + ", ".join(a.args[1:]) + ']'
+            else:
+                argspec = ''
             myName  = name
         else:
             myName  = re.sub('^_', '', name)
@@ -195,29 +195,6 @@ class Statistic(Expr):
         else:
             e = self.f(r)
             return e if isinstance(e, NP.ndarray) else NP.array([e])
-
-class DefaultStat(Statistic):
-    def f(self, x):
-        return x
-
-class FactorStatistic(Expr):
-    __metaclass__ = DocumentedStatistic
-    def __init__(self, metric, factor, gfunc=DefaultStat):
-        self.metric = metric
-        self.factor = factor
-        self.gfunc  = gfunc(metric)
-    
-    def eval(self, cmpH5, idx):
-        r   = self.metric.eval(cmpH5, idx)
-        fr  = split(range(len(idx)), self.factor.eval(cmpH5, idx))
-        res = NP.zeros(len(idx), dtype=NP.int)
-        for v in fr.values():
-            res[v] = self.gfunc.f(r[v])        
-        return self.f(res)
-
-    def f(self, x):
-        return x
-        
 
 class Metric(Expr):
     __metaclass__ = DocumentedMetric
@@ -336,13 +313,45 @@ class Round(Statistic):
         return NP.around(x, self.digits)
     
 
-
-# Factor Statistic
-class DoByMolecule(FactorStatistic):
-    def __init__(self, metric, gfunc):
-        super(DoByMolecule, self).__init__(metric, MoleculeName, gfunc)
+##
+## XXX : Not sure that this is correct. This will work, but it begs
+## the question whether or not we need some new category, like
+## 'Operator' to encompass particular ways of tabulating.
+##
+## Additionally, FactorStatistics can be computed using a group by -
+## it is only the case that you need this in a where where you need
+## this new concept.
+class ByFactor(Metric):
+    __metaclass__ = DocumentedMetric
+    
+    def __init__(self, metric, factor, statistic):
+        self.metric     = metric
+        self.factor     = factor
+        self.statistic  = statistic(metric)
         
+    def produce(self, cmpH5, idx):
+        r   = self.metric.eval(cmpH5, idx)
+        fr  = split(range(len(idx)), self.factor.eval(cmpH5, idx))
+        res = NP.zeros(len(idx), dtype = NP.int)
+        for v in fr.values():
+            res[v] = self.statistic.f(r[v])
+        return res
 
+class _MoleculeReadStart(ByFactor):
+    def __init__(self):
+        super(_MoleculeReadStart, self).__init__(ReadStart, MoleculeName, Min)
+
+class _MinSubreadLength(ByFactor):
+    def __init__(self):
+        super(_MinSubreadLength, self).__init__(ReadLength, MoleculeName, Min)
+
+class _MaxSubreadLength(ByFactor):
+    def __init__(self):
+        super(_MaxSubreadLength, self).__init__(ReadLength, MoleculeName, Max)
+
+class _UnrolledReadLength(ByFactor):
+    def __init__(self):
+        super(_UnrolledReadLength, self).__init__(ReadLength, MoleculeName, Sum)
 
 
 # Metrics
@@ -458,14 +467,16 @@ class _Barcode(Factor):
         return NP.array([cmpH5[i].barcode for i in idx])
 
 class SubSample(Metric):
-    """boolean vector with true occuring at rate rate"""
-    def __init__(self, rate = 1):
+    """boolean vector with true occuring at rate rate or nreads = n"""
+    def __init__(self, rate = 1, n = None):
         self.rate = rate
+        self.n    = n
 
     def produce(self, cmpH5, idx):
-        return NP.array(NP.random.binomial(1, self.rate, len(idx)),
-                        dtype = bool)
-
+        if self.n is not None:
+            return NP.in1d(idx, NP.floor(NP.random.uniform(0, len(idx), self.n)))
+        else:
+            return NP.array(NP.random.binomial(1, self.rate, len(idx)), dtype = bool)
 
 ###############################################################################
 ##
@@ -497,10 +508,12 @@ TemplateStart       = _TemplateStart()
 ReadEnd             = _ReadEnd()
 ReadStart           = _ReadStart()
 Barcode             = _Barcode()
-MoleculeReadStart   = DoByMolecule(ReadStart, Min)
-MinSubreadLength    = DoByMolecule(ReadLength, Min)
-MaxSubreadLength    = DoByMolecule(ReadLength, Max)
-UnrolledReadLength  = DoByMolecule(ReadLength, Sum)
+
+MoleculeReadStart   = _MoleculeReadStart()
+MinSubreadLength    = _MinSubreadLength()
+MaxSubreadLength    = _MaxSubreadLength()
+UnrolledReadLength  = _UnrolledReadLength()
+
 
 def query(reader, what = DefaultWhat, where = DefaultWhere(), 
           groupBy = DefaultGroupBy()):

@@ -36,6 +36,11 @@ take 50% of the reads
 
   $ cmph5tools.py listMetrics
   --- Metrics:
+  ByFactor[metric, factor, statistic]\t (esc)
+  _MoleculeReadStart\t (esc)
+  _MinSubreadLength\t (esc)
+  _MaxSubreadLength\t (esc)
+  _UnrolledReadLength\t (esc)
   TemplateSpan
   \tThe number of template bases covered by the read\t (esc)
   ReadLength\t (esc)
@@ -58,20 +63,18 @@ take 50% of the reads
   Strand\t (esc)
   AlignmentIdx\t (esc)
   Barcode\t (esc)
-  SubSample[rate]
-  \tboolean vector with true occuring at rate rate (esc)
+  SubSample[rate, n]
+  \tboolean vector with true occuring at rate rate or nreads = n (esc)
   
   --- Statistics:
-  FactorStatistic[gfunc]\t (esc)
   Min\t (esc)
   Max\t (esc)
   Sum\t (esc)
   Mean\t (esc)
   Median\t (esc)
   Count\t (esc)
-  Percentile[ptile]\t (esc)
-  Round[digits]\t (esc)
-  DoByMolecule[gfunc]
+  Percentile[metric, ptile]\t (esc)
+  Round[metric, digits]
 
 ## Example 4: Familiar SQL-like syntax
 
