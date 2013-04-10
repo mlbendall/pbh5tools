@@ -35,27 +35,6 @@ from pbtools.pbh5tools.Metrics import *
 def prettyPrint(res):
     print rec2txt(res, padding = 10, precision = 2)
 
-    # def formatElt(x):
-    #     if isinstance(x, float):
-    #         r = str(round(x, 2))
-    #     else:
-    #         r = str(x)
-    #     return r
-    
-    # names  = [str(n) for n in res.dtype.names]
-    # header = "\t".join(names)
-    # print header
-    # print "".join(['-'] * (sum(map(len, names)) + 
-    #                        6*(len(names) - 1)))
-    # if res.shape:
-    #     for i in xrange(0, res.shape[0]):
-    #         rec = res[i,]
-    #         print "\t".join([formatElt(x) for x in rec])
-    # else:
-    #     print "\t".join([formatElt(res[n]) for n in res.dtype.names])
-            
-    
-
 def cmpH5Stats(cmpH5Filename, whatStr = None, whereStr = None, 
                groupByStr = None, outFile = None):
     reader  = CmpH5Reader(cmpH5Filename)
