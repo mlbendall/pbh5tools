@@ -52,8 +52,8 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         desc = ['Toolkit for command-line tools associated with cmp.h5 file processing.',
                 'Notes: For all command-line arguments, default values are listed in [].']
         super(CmpH5ToolsRunner, self).__init__('\n'.join(desc))
-        subparsers = self.getSubParsers()
-        
+        subparsers = self.subParsers
+
         # select
         desc = ['Create a new cmp.h5 file by selecting alignments.',
                 'Users can specify indices using the idx argument to select',
@@ -63,9 +63,11 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                 'If a groupBy expression is specified then mulitple cmp.h5 files are',
                 'generated according to the expression. For instance, if a user wanted'
                 'to generate a cmp.h5 file for each reference sequence then --groupBy=Reference']
+
         parser = subparsers.add_parser('select', help = 'Create new cmp.h5 files from selections of input.cmp.h5', 
-                                       description = '\n'.join(desc),
-                                       parents = [self.parser])
+                                       description = '\n'.join(desc))
+
+
         parser.add_argument('inCmp', metavar='input.cmp.h5')
         parser.add_argument('--outFile',
                             default = "out.cmp.h5",
@@ -85,8 +87,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                 'been aligned to the same reference sequences']
         parser = subparsers.add_parser('merge', 
                                        help = 'Merge input.cmp.h5 files into out.cmp.h5',
-                                       description='\n'.join(desc),
-                                       parents=[self.parser])
+                                       description='\n'.join(desc))
         parser.add_argument('--outFile', 
                             dest='outCmp', default='out.cmp.h5', 
                             help='output filename [%(default)s]')
@@ -98,8 +99,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                 'overwritten']
         parser= subparsers.add_parser('sort',
                                          help='Sort input.cmp.h5 file',
-                                         description='\n'.join(desc),
-                                         parents=[self.parser])
+                                         description='\n'.join(desc))
         parser.add_argument('inCmp', metavar='input.cmp.h5',
                               help='input filename')
         parser.add_argument('--outFile', dest='outCmp', 
@@ -119,8 +119,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         desc = ['Compare two cmp.h5 files for equivalence.']
         parser = subparsers.add_parser('equal',
                                          help='Compare two cmp.h5 files for equivalence',
-                                         description='\n'.join(desc),
-                                         parents=[self.parser])
+                                         description='\n'.join(desc))
         parser.add_argument('inCmp1', metavar='cmp.h5.1', help='filename 1')
         parser.add_argument('inCmp2', metavar='cmp.h5.2', help='filename 2')
 
@@ -128,8 +127,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         desc = ['Summarize cmp.h5 files.']
         parser = subparsers.add_parser('summarize',
                                          help='Summarize contents of cmp.h5 files',
-                                         description='\n'.join(desc),
-                                         parents=[self.parser])
+                                         description='\n'.join(desc))
         parser.add_argument('inCmps', metavar='input.cmp.h5', nargs='+',
                             help='cmp.h5 files to summarize')
      
@@ -137,8 +135,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         desc = ['Emit statistics from a cmp.h5 file.']
         parser = subparsers.add_parser('stats',
                                        help='Compute statistics from input.cmp.h5',
-                                       description='\n'.join(desc),
-                                       parents=[self.parser])
+                                       description='\n'.join(desc))
         parser.add_argument('--outFile', dest='outCsv', 
                             help='output csv filename', default = None)
         parser.add_argument('--what', metavar = 'what-expression',
@@ -173,7 +170,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         return __version__
     
     def run(self):
-        cmd = self.args.subName
+        cmd = self.args.subCommand
         try: 
             if cmd == 'merge':
                 cmpH5Merge(self.args.inCmps, self.args.outCmp)

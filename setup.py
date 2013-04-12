@@ -31,7 +31,7 @@ setup(
                            extra_compile_args=["-O3","-shared"])], 
     zip_safe = False,
     install_requires=[
-        'pbcore >= 0.1',
+        'pbcore >= 0.6.2',
         'numpy >= 1.6.0',
         'h5py >= 1.3.0'
         ]
