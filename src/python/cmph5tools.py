@@ -151,8 +151,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         desc = ["List available metrics and statistics for selection and stats."]
         parser = subparsers.add_parser('listMetrics', 
                                        help = "List available metrics",
-                                       description = '\n'.join(desc),
-                                       parents = [self.parser])
+                                       description = '\n'.join(desc))
         parser.add_argument('--json', default = False, action = 'store_true',
                             help = 'Should output be in JSON format')
 
@@ -160,8 +159,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
         desc = ['Validate a cmp.h5 file']
         parser = subparsers.add_parser('validate',
                                        help = 'Validate input.cmp.h5',
-                                       description = '\n'.join(desc),
-                                       parents = [self.parser])
+                                       description = '\n'.join(desc))
         parser.add_argument('inCmp', metavar = 'input.cmp.h5',
                             help = 'input filename')
         
