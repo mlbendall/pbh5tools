@@ -1,31 +1,33 @@
-#################################################################################$$
-# Copyright (c) 2011,2012, Pacific Biosciences of California, Inc.
+#################################################################################
+# Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
 #
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
-#   and/or other materials provided with the distribution.
-# * Neither the name of Pacific Biosciences nor the names of its contributors
-#   may be used to endorse or promote products derived from this software
-#   without specific prior written permission.
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the distribution.
+# * Neither the name of Pacific Biosciences nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR ITS
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
+# THIS LICENSE.  THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR
+# ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 # EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#################################################################################$$
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#################################################################################
+
 import os
 import sys
 import shutil
@@ -135,7 +137,7 @@ def computeRefIndexTable(refIDVector):
         else:
             row += 1
             offsets[row, 0] = ID
-            offsets[row, 1] = offsets[row - 1, 2] 
+            offsets[row, 1] = offsets[row - 1, 2]
             offsets[row, 2] = offsets[row - 1, 2] + 1
     return offsets
 
@@ -168,14 +170,14 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
               raise PBH5ToolsException("sort", "Datasets must agree:\n" + ",".join(spd) +
                                        "\nvs\n" + ",".join(uPulseDatasets))
 
-    readGroupPaths = dict(zip(cH5[format.ALN_GROUP_ID], 
+    readGroupPaths = dict(zip(cH5[format.ALN_GROUP_ID],
                               [x for x in cH5[format.ALN_GROUP_PATH]]))
-    refGroupPaths  = dict(zip(cH5[format.REF_GROUP_ID], 
+    refGroupPaths  = dict(zip(cH5[format.REF_GROUP_ID],
                               [x for x in cH5[format.REF_GROUP_PATH]]))
-    uPDAndType     = dict(zip(uPulseDatasets, 
-                              [cH5[readGroupPaths.values()[0]][z].dtype 
+    uPDAndType     = dict(zip(uPulseDatasets,
+                              [cH5[readGroupPaths.values()[0]][z].dtype
                                for z in uPulseDatasets]))
-    
+
     ## XXX : this needs to be augmented with some saftey on not
     ## loading too much data.  - set a bound on the number of elts in
     ## the cache.
@@ -216,7 +218,7 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
     refGroupAlnGroups = []
 
     for row in xrange(0, offsets.shape[0]):
-        logging.info("Processing reference: %d of %d" % 
+        logging.info("Processing reference: %d of %d" %
                      (row + 1, offsets.shape[0]))
 
         groupID = offsets[row, 0]
@@ -303,9 +305,9 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
     logging.info("Writing new AlnGroupPath values.")
     del(cH5[format.ALN_GROUP_PATH])
     del(cH5[format.ALN_GROUP_ID])
-    cH5.create_dataset(format.ALN_GROUP_PATH, data = map(str, refGroupAlnGroups), 
+    cH5.create_dataset(format.ALN_GROUP_PATH, data = map(str, refGroupAlnGroups),
                        ## XXX : unicode.
-                       dtype = H5.special_dtype(vlen = str), maxshape = (None,), 
+                       dtype = H5.special_dtype(vlen = str), maxshape = (None,),
                        chunks = (256,))
     cH5.create_dataset(format.ALN_GROUP_ID, data = range(1, currentAlnID),
                        dtype = "int32", maxshape = (None,), chunks = (256,))
@@ -320,11 +322,11 @@ def __repackDataArrays(cH5, format, fixedMem = False, maxDatasetSize = 2**31 - 1
               del(cH5[rg])
          else:
               logging.warn("Input cmp.h5 file is out of spec, duplicate " +
-                           "alignment group paths with different IDs (sorting" + 
+                           "alignment group paths with different IDs (sorting" +
                            "is unaffected)")
 
 
-def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True, 
+def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
               inPlace = False):
     """
     This routine takes a cmp.h5 file and sorts the AlignmentIndex
@@ -353,10 +355,10 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
          shutil.copyfile(inFile, _inFile)
          outFile = _inFile
     else:
-         raise PBH5ToolsException("sort", "Improper call, must specify outFile," + 
+         raise PBH5ToolsException("sort", "Improper call, must specify outFile," +
                                   "tmpDir, or inPlace must be True.")
 
-    logging.info("Processing inFile: %s saving in outFile: %s" % 
+    logging.info("Processing inFile: %s saving in outFile: %s" %
                  (_inFile, outFile))
 
 
@@ -399,7 +401,7 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
         refInfoIds = NP.array([refIdToInfoId[i] for i in aI[:,format.REF_ID]])
         aord = NP.lexsort([aI[:,format.TARGET_END], aI[:,format.TARGET_START],
                            refInfoIds])
-        
+
         assert(len(aord) == aI.shape[0])
 
         sAI = aI.value[aord,:]
@@ -431,7 +433,7 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
         # modify the cmp.h5 file.
         # We want to keep the chunking info on the dataset.
         del(cH5[format.ALN_INDEX])
-        cH5.create_dataset(format.ALN_INDEX, data = sAI, 
+        cH5.create_dataset(format.ALN_INDEX, data = sAI,
                            dtype = H5.h5t.NATIVE_UINT32,
                            maxshape = (None, None))
 
@@ -465,7 +467,7 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
             if (__pathExists(cH5, extraTable)):
                 logging.info("Sorting dataset: %s" % extraTable)
                 # need .value for permutation to work.
-                eTable = cH5[extraTable].value 
+                eTable = cH5[extraTable].value
                 if (len(eTable.shape) == 1):
                     eTable = eTable[aord]
                 else:
@@ -475,7 +477,7 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
                 originalAttrs = cH5[extraTable].attrs
                 originalDtype = cH5[extraTable].dtype
                 del(cH5[extraTable])
-                cH5.create_dataset(extraTable, data = eTable, 
+                cH5.create_dataset(extraTable, data = eTable,
                                    dtype = originalDtype,
                                    maxshape = tuple([None for x in eTable.shape]))
                 logging.info("Sorted dataset: %s" % extraTable)
@@ -489,7 +491,7 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
                      else:
                           newDtype = originalAttrs[k].dtype
 
-                     cH5[extraTable].attrs.create(k, originalAttrs[k], 
+                     cH5[extraTable].attrs.create(k, originalAttrs[k],
                                                   dtype = newDtype)
 
                 logging.info("Finished processing dataset: %s" % extraTable)

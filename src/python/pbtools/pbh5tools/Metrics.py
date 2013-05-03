@@ -1,31 +1,33 @@
-#################################################################################$$
-# Copyright (c) 2011,2012, Pacific Biosciences of California, Inc.
+#################################################################################
+# Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
 #
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without 
+# Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# * Redistributions of source code must retain the above copyright notice, this 
-#   list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above copyright notice, 
-#   this list of conditions and the following disclaimer in the documentation 
-#   and/or other materials provided with the distribution.
-# * Neither the name of Pacific Biosciences nor the names of its contributors 
-#   may be used to endorse or promote products derived from this software 
-#   without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS CONTRIBUTORS 
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
-# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR ITS 
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
-# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#################################################################################$$
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the distribution.
+# * Neither the name of Pacific Biosciences nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+#
+# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
+# THIS LICENSE.  THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR
+# ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#################################################################################
+
 import sys
 import os
 import h5py
@@ -115,7 +117,7 @@ class BinOp(Expr):
         elif self.op == '&':
             return self.l(cmpH5, idx) & self.r(cmpH5, idx)
         elif self.op == ':':
-            return [(str(x) + ":" + str(y)) for x,y in zip(self.l(cmpH5, idx), 
+            return [(str(x) + ":" + str(y)) for x,y in zip(self.l(cmpH5, idx),
                                                            self.r(cmpH5, idx))]
         else:
             raise Exception("Undefined operation:" + self.op)
@@ -132,7 +134,7 @@ class Flatten(Expr):
             return r
 
 def processClass(cls, name, bases, dct):
-    ignoreRes = ['^Default', '^Metric$', '^Statistic$', '^Factor$', 
+    ignoreRes = ['^Default', '^Metric$', '^Statistic$', '^Factor$',
                  '^FactorStatistic']
 
     if not any(map(lambda x : re.match(x, name), ignoreRes)):
@@ -149,13 +151,13 @@ def processClass(cls, name, bases, dct):
         else:
             myName  = re.sub('^_', '', name)
             argspec = ''
-            
+
         if '__doc__' in dct:
             docstr = dct['__doc__']
         else:
             docstr = ''
-        
-        return myName + argspec + ('\n\t' + docstr if 
+
+        return myName + argspec + ('\n\t' + docstr if
                                    docstr else docstr)
     else:
         return None
@@ -164,7 +166,7 @@ def processClass(cls, name, bases, dct):
 class DocumentedMetric(type):
     Metrics = []
     def __new__(cls, name, bases, dct):
-        DocumentedMetric.Metrics.append(processClass(cls, name, 
+        DocumentedMetric.Metrics.append(processClass(cls, name,
                                                      bases, dct))
         return type.__new__(cls, name, bases, dct)
 
@@ -175,7 +177,7 @@ class DocumentedMetric(type):
 class DocumentedStatistic(type):
     Statistics = []
     def __new__(cls, name, bases, dct):
-        DocumentedStatistic.Statistics.append(processClass(cls, name, 
+        DocumentedStatistic.Statistics.append(processClass(cls, name,
                                                            bases, dct))
         return type.__new__(cls, name, bases, dct)
 
@@ -201,7 +203,7 @@ class Metric(Expr):
 
     def eval(self, cmpH5, idx):
         return self.produce(cmpH5, idx)
-        
+
 class Factor(Metric):
     def __rmul__(self, other):
         return BinOp(other, self, ':')
@@ -223,7 +225,7 @@ def split(x, f):
     # rather than the appends.
     assert(len(x) == len(f))
     levels  = NP.unique(f)
-    counts  = {k:0 for k in levels} 
+    counts  = {k:0 for k in levels}
     for i in xrange(0, len(x)):
         counts[f[i]] += 1
     results = { k:NP.zeros(v, dtype = int) for k,v in counts.items() }
@@ -231,7 +233,7 @@ def split(x, f):
         k = f[i]
         results[k][counts[k] - 1] = x[i]
         counts[k] -= 1
-    # reverse it. 
+    # reverse it.
     return { k:v[::-1] for k,v in results.items() }
 
 
@@ -266,27 +268,27 @@ def toRecArray(res):
             recArrays.append(convertToRecArray(res[k], k))
         v = NP.hstack(recArrays)
 
-        # XXX : augmenting with a sortBy clause would make sense. 
+        # XXX : augmenting with a sortBy clause would make sense.
         if 'Group' in v.dtype.names:
             return v[NP.argsort(v['Group']),]
         else:
             return v
 
-# Stats 
+# Stats
 class Min(Statistic):
-    def f(self, x): 
+    def f(self, x):
         return NP.min(x[~NP.isnan(x)])
 
 class Max(Statistic):
-    def f(self, x): 
+    def f(self, x):
         return NP.max(x[~NP.isnan(x)])
 
 class Sum(Statistic):
-    def f(self, x): 
+    def f(self, x):
         return NP.sum(x[~NP.isnan(x)])
 
 class Mean(Statistic):
-    def f(self, x): 
+    def f(self, x):
         return NP.mean(x[~NP.isnan(x)])
 
 class Median(Statistic):
@@ -303,7 +305,7 @@ class Percentile(Statistic):
         self.ptile = ptile
 
     def f(self, x):
-        return NP.percentile(x[~NP.isnan(x)], self.ptile)    
+        return NP.percentile(x[~NP.isnan(x)], self.ptile)
 
 class Round(Statistic):
     def __init__(self, metric, digits = 0):
@@ -311,7 +313,7 @@ class Round(Statistic):
         self.digits = digits
     def f(self, x):
         return NP.around(x, self.digits)
-    
+
 
 ##
 ## XXX : Not sure that this is correct. This will work, but it begs
@@ -323,12 +325,12 @@ class Round(Statistic):
 ## this new concept.
 class ByFactor(Metric):
     __metaclass__ = DocumentedMetric
-    
+
     def __init__(self, metric, factor, statistic):
         self.metric     = metric
         self.factor     = factor
         self.statistic  = statistic(metric)
-        
+
     def produce(self, cmpH5, idx):
         r   = self.metric.eval(cmpH5, idx)
         fr  = split(range(len(idx)), self.factor.eval(cmpH5, idx))
@@ -382,7 +384,7 @@ class _NErrors(Metric):
 
 class _ReadDuration(Metric):
     def produce(self, cmpH5, idx):
-        return NP.array([ sum(cmpH5[i].IPD() + cmpH5[i].PulseWidth()) 
+        return NP.array([ sum(cmpH5[i].IPD() + cmpH5[i].PulseWidth())
                           for i in idx ])
 class _FrameRate(Metric):
     def produce(self, cmpH5, idx):
@@ -394,8 +396,8 @@ class _IPD(Metric):
 
 class _PulseWidth(Metric):
     def produce(self, cmpH5, idx):
-        return [ cmpH5[i].PulseWidth() for i in idx ] 
-    
+        return [ cmpH5[i].PulseWidth() for i in idx ]
+
 class _Movie(Factor):
     # def produce(self, cmpH5, idx):
     #     mtb = cmpH5.movieInfoTable
@@ -403,7 +405,7 @@ class _Movie(Factor):
     #     mapping[NP.array([i.ID for i in mtb])] = \
     #         NP.array([i.Name for i in mtb])
     #     return mapping[cmpH5.alignmentIndex.MovieID]
-        
+
     # this is super slow
     def produce(self, cmpH5, idx):
         return NP.array([cmpH5[i].movieInfo['Name'] for i in idx])
@@ -431,7 +433,7 @@ class _HoleNumber(Factor):
 class _ReadStart(Metric):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['rStart'][idx]
-    
+
 class _ReadEnd(Metric):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['rEnd'][idx]
@@ -447,13 +449,13 @@ class _TemplateEnd(Metric):
 class _MoleculeId(Factor):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['MoleculeID'][idx]
-    
+
 class _MoleculeName(Factor):
     def produce(self, cmpH5, idx):
-        molecules = zip(cmpH5.alignmentIndex['MovieID'][idx], 
+        molecules = zip(cmpH5.alignmentIndex['MovieID'][idx],
                         cmpH5.alignmentIndex['HoleNumber'][idx])
         return NP.array(['%s_%s' % (m,h) for m,h in molecules])
-        
+
 class _Strand(Factor):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex['RCRefStrand'][idx]
@@ -486,7 +488,7 @@ class SubSample(Metric):
 ###############################################################################
 ReadLength          = _ReadLength()
 TemplateSpan        = _TemplateSpan()
-NErrors             = _NErrors()    
+NErrors             = _NErrors()
 ReadFrames          = _ReadDuration() * 1.0
 FrameRate           = _FrameRate()
 IPD                 = _IPD()
@@ -515,10 +517,10 @@ MaxSubreadLength    = _MaxSubreadLength()
 UnrolledReadLength  = _UnrolledReadLength()
 
 
-def query(reader, what = DefaultWhat, where = DefaultWhere(), 
+def query(reader, what = DefaultWhat, where = DefaultWhere(),
           groupBy = DefaultGroupBy()):
     idxs = NP.where(where.eval(reader, range(0, len(reader))))[0]
     groupBy = groupBy.eval(reader, idxs)
 
-    return { k:what.eval(reader, v) for k,v in 
+    return { k:what.eval(reader, v) for k,v in
              split(idxs, groupBy).items() }
