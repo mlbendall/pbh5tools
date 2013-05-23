@@ -267,7 +267,8 @@ def cmpH5Merge(inFiles, outFile):
     except Exception, e:
         try:
             # remove the file as it won't be correct
-            os.remove(outFile)
+            if os.path.exists(outFile):
+                os.remove(outFile)
         except:
             pass
         raise
