@@ -86,10 +86,15 @@ class Expr(object):
         return BinOp(self, other, '|')
 
 class BinOp(Expr):
-    def __init__(self, l, r, op):
-        self.l  = procMe(l)
-        self.r  = procMe(r)
+    def __init__(self, ll, rr, op):
+        self.ll = ll
+        self.rr = rr
+        self.l  = procMe(ll)
+        self.r  = procMe(rr)
         self.op = op
+
+    def __str__(self):
+        return str(self.ll) + str(self.op) + str(self.rr)
 
     def eval(self, cmpH5, idx):
         if self.op == '+':
@@ -198,11 +203,18 @@ class Statistic(Expr):
             e = self.f(r)
             return e if isinstance(e, NP.ndarray) else NP.array([e])
 
+    def __str__(self):
+        return self.__class__.__name__ + '(' + str(self.metric) + ')'
+
 class Metric(Expr):
     __metaclass__ = DocumentedMetric
 
     def eval(self, cmpH5, idx):
         return self.produce(cmpH5, idx)
+
+    def __str__(self):
+        return re.sub('^_', '', self.__class__.__name__)
+
 
 class Factor(Metric):
     def __rmul__(self, other):
@@ -238,6 +250,7 @@ def split(x, f):
 
 
 def toRecArray(res):
+    ## XXX : this ain't beautiful.
     def myDtype(x):
         if 'dtype' in dir(x):
             return x.dtype
@@ -253,26 +266,22 @@ def toRecArray(res):
         return NP.array([groupName]*myLen(seq))
 
     def convertToRecArray(elt, groupName = None):
-        nat = [(n[0], myDtype(n[1])) for n in elt]
+        ## recArrays don't like things other than strings for names.
+        nat = [(str(n[0]), myDtype(n[1])) for n in elt]
         dta = [n[1] for n in elt]
         if groupName:
             nat.insert(0, ('Group', object))
             dta.insert(0, expand(groupName, dta[0]))
+
         return NP.rec.array(dta, dtype = nat)
 
     if DefaultGroupBy.word() in res:
         return convertToRecArray(res[DefaultGroupBy.word()])
     else:
         recArrays = []
-        for k in res.keys():
+        for k in sorted(res.keys()):
             recArrays.append(convertToRecArray(res[k], k))
-        v = NP.hstack(recArrays)
-
-        # XXX : augmenting with a sortBy clause would make sense.
-        if 'Group' in v.dtype.names:
-            return v[NP.argsort(v['Group']),]
-        else:
-            return v
+        return NP.hstack(recArrays)
 
 # Stats
 class Min(Statistic):
@@ -355,19 +364,21 @@ class _UnrolledReadLength(ByFactor):
     def __init__(self):
         super(_UnrolledReadLength, self).__init__(ReadLength, MoleculeName, Sum)
 
-
 # Metrics
-class DefaultWhere(Metric):
+class _DefaultWhere(Metric):
     def produce(self, cmpH5, idx):
         return NP.ones(len(idx), dtype = bool)
+DefaultWhere = _DefaultWhere()
 
-class DefaultGroupBy(Metric):
+class _DefaultGroupBy(Metric):
     @staticmethod
     def word():
         return 'DefaultGroupBy'
 
     def produce(self, cmpH5, idx):
         return NP.array([DefaultGroupBy.word()] * len(idx))
+DefaultGroupBy = _DefaultGroupBy()
+
 
 class _TemplateSpan(Metric):
     """The number of template bases covered by the read"""
@@ -399,18 +410,6 @@ class _PulseWidth(Metric):
         return [ cmpH5[i].PulseWidth() for i in idx ]
 
 class _Movie(Factor):
-    # def produce(self, cmpH5, idx):
-    #     mtb = cmpH5.movieInfoTable
-    #     mapping = NP.zeros((NP.max([ i.ID for i in mtb]) + 1, ), dtype = object)
-    #     mapping[NP.array([i.ID for i in mtb])] = \
-    #         NP.array([i.Name for i in mtb])
-    #     return mapping[cmpH5.alignmentIndex.MovieID]
-
-    # this is super slow
-    def produce(self, cmpH5, idx):
-        return NP.array([cmpH5[i].movieInfo['Name'] for i in idx])
-
-class _Movie2(Factor):
     def produce(self, cmpH5, idx):
         mtb = cmpH5.movieInfoTable
         mapping = NP.zeros((NP.max([ i.ID for i in mtb]) + 1, ), dtype = object)
@@ -495,8 +494,7 @@ IPD                 = _IPD()
 PulseWidth          = _PulseWidth()
 Accuracy            = 1.0 - NErrors/(ReadLength * 1.0)
 PolRate             = TemplateSpan/(ReadFrames/(FrameRate * 1.0))
-Movie               = _Movie2()
-MovieSlow           = _Movie()
+Movie               = _Movie()
 DefaultWhat         = Tbl(readLength = ReadLength, accuracy = Accuracy)
 Reference           = _Reference()
 RefIdentifier       = _RefIdentifier()
@@ -516,11 +514,16 @@ MinSubreadLength    = _MinSubreadLength()
 MaxSubreadLength    = _MaxSubreadLength()
 UnrolledReadLength  = _UnrolledReadLength()
 
+DefaultSortBy       = Tbl(alignmentIdx = AlignmentIdx)
 
-def query(reader, what = DefaultWhat, where = DefaultWhere(),
-          groupBy = DefaultGroupBy()):
+def query(reader, what = DefaultWhat, where = DefaultWhere,
+          groupBy = DefaultGroupBy, sortBy = DefaultSortBy):
     idxs = NP.where(where.eval(reader, range(0, len(reader))))[0]
     groupBy = groupBy.eval(reader, idxs)
-
-    return { k:what.eval(reader, v) for k,v in
-             split(idxs, groupBy).items() }
+    results = {}
+    
+    for k,v in split(idxs, groupBy).items():
+        sortVals = sortBy.eval(reader, v)
+        sortIdxs = v[NP.lexsort(map(lambda z : z[1], sortVals)[::-1])]
+        results[k] = what.eval(reader, sortIdxs)
+    return results

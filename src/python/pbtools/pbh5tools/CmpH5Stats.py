@@ -35,38 +35,44 @@ from mlab import rec2csv, rec2txt
 from pbtools.pbh5tools.Metrics import *
 
 def prettyPrint(res):
-    print rec2txt(res, padding = 10, precision = 2)
+    print rec2txt(res, padding = 20, precision = 2)
 
-def cmpH5Stats(cmpH5Filename, whatStr = None, whereStr = None,
-               groupByStr = None, outFile = None):
-    reader  = CmpH5Reader(cmpH5Filename)
-    where   = DefaultWhere() if whereStr is None else eval(whereStr)
-    groupBy = DefaultGroupBy() if groupByStr is None else eval(groupByStr)
-    what    = DefaultWhat if whatStr is None else eval(whatStr)
-
-    if not isinstance(what, Tbl):
-        if hasEval(what):
-            tbl = Tbl()
-            tbl.cols[whatStr] = what
-        elif isinstance(what, tuple):
-            tbl = Tbl()
-            for i,e in enumerate(what):
-                tbl.cols[i] = e
-        else:
-            raise PBH5ToolsException("Invalid what specified: must be" +
-                                     " a table or expression.")
+def makeTblFromInput(exprStr, defaultValue):
+    if not exprStr:
+        return defaultValue
     else:
-        tbl = what
+        tbl = eval(exprStr)
+        if not isinstance(tbl, Tbl):
+          if hasEval(tbl): 
+              ## just a naked expression, wrap it. 
+              ntbl = Tbl()
+              ntbl.cols[exprStr] = tbl
+              tbl = ntbl  
+          elif isinstance(tbl, tuple):
+              ## table the tuple. 
+              ntbl = Tbl()
+              for i,e in enumerate(tbl):
+                  ntbl.cols[str(e)] = e
+              tbl = ntbl
+          else:
+              raise PBH5ToolsException("stats", "Invalid expression specified: must be" +
+                                       " a table, expression, or tuple.")
+        return tbl
+            
+def cmpH5Stats(cmpH5Filename, whatStr = None, whereStr = None,
+               groupByStr = None, sortByStr = None, outFile = None):
 
-    # from IPython import embed; embed()
-    res = query(reader, tbl, where, groupBy)
+    reader  = CmpH5Reader(cmpH5Filename)
+    where   = DefaultWhere if whereStr is None else eval(whereStr)
+    groupBy = DefaultGroupBy if groupByStr is None else eval(groupByStr)
+    what    = makeTblFromInput(whatStr, DefaultWhat)
+    sortBy  = makeTblFromInput(sortByStr, DefaultSortBy)
+
+    res = query(reader, what, where, groupBy, sortBy)
     res = toRecArray(res)
-
     if not outFile:
         prettyPrint(res)
     else:
         rec2csv(res, outFile)
-
-
 
 

@@ -145,8 +145,9 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                             default = None)
         parser.add_argument('--groupBy', metavar='groupBy-expression',
                             default = None)
-        parser.add_argument('inCmp', metavar='input.cmp.h5',
-                                  help='input filename')
+        parser.add_argument('--sortBy', metavar='sortBy-expression',
+                            default = None)
+        parser.add_argument('inCmp', metavar='input.cmp.h5', help='input filename')
 
         # listMetrics
         desc = ["List available metrics and statistics for selection and stats."]
@@ -187,8 +188,12 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                             outDir = self.args.outDir)
 
             elif cmd == 'stats':
-                cmpH5Stats(self.args.inCmp, self.args.what, self.args.where,
-                           self.args.groupBy, self.args.outCsv)
+                cmpH5Stats(self.args.inCmp, 
+                           whatStr = self.args.what, 
+                           whereStr = self.args.where,
+                           groupByStr = self.args.groupBy, 
+                           sortByStr = self.args.sortBy,
+                           outFile =  self.args.outCsv)
 
             elif cmd == 'listMetrics':
                 print '--- Metrics:'

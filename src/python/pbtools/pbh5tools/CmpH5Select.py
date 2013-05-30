@@ -54,13 +54,15 @@ def cmpH5Select(inCmpFile, outCmp, idxs = None,
     if idxs:
         doSelect(inCmpFile, outCmp, idxs)
     else:
-        where   = DefaultWhere() if whereStr is None else eval(whereStr)
-        groupBy = DefaultGroupBy() if groupByStr is None else eval(groupByStr)
+        where   = DefaultWhere if whereStr is None else eval(whereStr)
+        groupBy = DefaultGroupBy if groupByStr is None else eval(groupByStr)
         idxVecs = query(CmpH5Reader(inCmpFile),
                         what = AlignmentIdx,
                         where = where,
                         groupBy = groupBy)
         keys = idxVecs.keys()
+
+        ## XXX: Should the resultant files be sorted? 
         if len(keys) == 1:
             doSelect(inCmpFile, outCmp, idxVecs[keys[0]])
         else:

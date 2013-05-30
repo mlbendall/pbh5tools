@@ -20,16 +20,16 @@ take 50% of the reads
 
   $ cmph5tools.py stats --what "Tbl(q = Percentile(ReadLength, 90), m = Median(Accuracy))" \
   > --groupBy Barcode $INCMP | tail
-  bc_88--bc_88      486.40          0.91
-  bc_89--bc_89      561.00          0.91
-  bc_9--bc_9        479.80          0.90
-  bc_90--bc_90      563.60          0.89
-  bc_91--bc_91      554.60          0.91
-  bc_92--bc_92      523.00          0.90
-  bc_93--bc_93      542.00          0.90
-  bc_94--bc_94      518.00          0.90
-  bc_95--bc_95      512.20          0.91
-  bc_96--bc_96      609.60          0.92
+  bc_88--bc_88                486.40                    0.91
+  bc_89--bc_89                561.00                    0.91
+  bc_9--bc_9                  479.80                    0.90
+  bc_90--bc_90                563.60                    0.89
+  bc_91--bc_91                554.60                    0.91
+  bc_92--bc_92                523.00                    0.90
+  bc_93--bc_93                542.00                    0.90
+  bc_94--bc_94                518.00                    0.90
+  bc_95--bc_95                512.20                    0.91
+  bc_96--bc_96                609.60                    0.92
 
 
 ## Example 3: query the package to determine the available metrics and statistics
@@ -41,6 +41,8 @@ take 50% of the reads
   _MinSubreadLength\t (esc)
   _MaxSubreadLength\t (esc)
   _UnrolledReadLength\t (esc)
+  DefaultWhere\t (esc)
+  DefaultGroupBy\t (esc)
   TemplateSpan
   \tThe number of template bases covered by the read\t (esc)
   ReadLength\t (esc)
@@ -50,7 +52,6 @@ take 50% of the reads
   IPD\t (esc)
   PulseWidth\t (esc)
   Movie\t (esc)
-  Movie2\t (esc)
   Reference\t (esc)
   RefIdentifier\t (esc)
   HoleNumber\t (esc)
@@ -81,23 +82,23 @@ take 50% of the reads
   $ cmph5tools.py stats --what "Tbl(a=Accuracy,b=Barcode)" \
   > --where "Barcode == 'bc_78--bc_78'" \
   > --groupBy Reference $INCMP
-  Group                a          b
-  MET_600_t2_2      0.94          bc_78--bc_78          
-  MET_600_t2_2      0.90          bc_78--bc_78          
-  MET_600_t2_2      0.90          bc_78--bc_78          
-  MET_600_t2_2      0.87          bc_78--bc_78          
-  MET_600_t2_2      0.89          bc_78--bc_78          
-  MET_600_t2_2      0.85          bc_78--bc_78          
-  MET_600_t2_2      0.82          bc_78--bc_78          
-  MET_600_t2_2      0.96          bc_78--bc_78          
+  Group                          a                    b
+  MET_600_t2_2                0.94                    bc_78--bc_78                    
+  MET_600_t2_2                0.90                    bc_78--bc_78                    
+  MET_600_t2_2                0.90                    bc_78--bc_78                    
+  MET_600_t2_2                0.87                    bc_78--bc_78                    
+  MET_600_t2_2                0.89                    bc_78--bc_78                    
+  MET_600_t2_2                0.85                    bc_78--bc_78                    
+  MET_600_t2_2                0.82                    bc_78--bc_78                    
+  MET_600_t2_2                0.96                    bc_78--bc_78                    
 
 ## Example 5: Familiar SQL-like functions
 
   $ cmph5tools.py stats --what "Count(Reference)" \
   > --where "Barcode == 'bc_78--bc_78'" \
   > --groupBy Reference $INCMP
-  Group             Count(Reference)
-  MET_600_t2_2                     8
+  Group                       Count(Reference)
+  MET_600_t2_2                               8
 
 ## Handling IPD, PulseWidth, and Base-level Metrics
 
@@ -108,8 +109,8 @@ provides convenience functions for dealing with this
   $ cmph5tools.py stats --where "(Barcode == 'bc_78--bc_78') & (Accuracy > .95)" \
   > --what "Tbl(idx = AlignmentIdx, ipd = Median(IPD), pw = Median(PulseWidth))" \
   > $INCMP
-             ipd             pw           idx
-            9.00          12.00          1683
+                       ipd                       pw                     idx
+                      9.00                    12.00                    1683
 
 **NOTE:** The '(' surrounding the clauses in the where predicate are
 
@@ -138,9 +139,9 @@ selection to produce plots on very arbitrary splits.
   > --where "(Barcode == 'bc_42--bc_42') | (Barcode == 'bc_28--bc_28')" $INCMP
   $ cmph5tools.py merge --outFile merged.cmp.h5 bc_42--bc_42.cmp.h5 bc_28--bc_28.cmp.h5
   $ cmph5tools.py stats --what "Count(Reference)" --groupBy Barcode merged.cmp.h5
-  Group             Count(Reference)
-  bc_28--bc_28                     6
-  bc_42--bc_42                    65
+  Group                       Count(Reference)
+  bc_28--bc_28                               6
+  bc_42--bc_42                              65
 
 
 **NOTE:** One of the reasons that the cmp.h5 file format is appealing
