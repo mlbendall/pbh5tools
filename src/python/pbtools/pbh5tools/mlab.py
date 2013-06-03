@@ -316,9 +316,7 @@ def rec2txt(r, header=None, padding=3, precision=3, fields=None):
     def get_justify(colname, column, precision):
         ntype = type(column[0])
 
-        if ntype==np.str or ntype==np.str_ or ntype==np.string0 or ntype==np.string_:
-            length = max(len(colname),column.itemsize)
-            return 0, length+padding, "%s" # left justify
+       
 
         if ntype==np.int or ntype==np.int16 or ntype==np.int32 or ntype==np.int64 or ntype==np.int8 or ntype==np.int_:
             length = max(len(colname),np.max(map(len,map(str,column))))
@@ -340,6 +338,11 @@ def rec2txt(r, header=None, padding=3, precision=3, fields=None):
             fmt = "%." + str(precision) + "f"
             length = max(len(colname),np.max(map(len,map(lambda x:fmt%x,column))))
             return 1, length+padding, fmt   # right justify
+
+
+        if ntype==np.str or ntype==np.str_ or ntype==np.string0 or ntype==np.string_:
+            length = max(len(colname),column.itemsize)
+            return 1, length+padding, "%s" # left justify // JHB changed the 0 to a 1
 
         return 0, max(len(colname),np.max(map(len,map(str,column))))+padding, "%s"
 

@@ -1,4 +1,4 @@
-  $ source $TESTDIR/portability.sh
+  $ . $TESTDIR/portability.sh
 
   $ INH5=`python -c "from pbcore import data ; print data.getCmpH5()['cmph5']"`
   $ CMD="cmph5tools.py stats $INH5"

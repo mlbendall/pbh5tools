@@ -36,6 +36,8 @@ import h5py as H5
 
 from pbcore.io.CmpH5Reader import *
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
+from pbtools.pbh5tools.Metrics import *
+from mlab import rec2csv, rec2txt
 
 def cmpH5Equal(inCmp1, inCmp2):
     """Compare two cmp.h5 files for equality. Here equality means the
@@ -55,19 +57,31 @@ def cmpH5Equal(inCmp1, inCmp2):
 
     return (True, )
 
-def cmpH5Summarize(inCmp):
+def cmpH5Summarize(inCmp, movieSummary = True, refSummary = True):
     """Summarize a cmp.h5 file"""
     reader = CmpH5Reader(inCmp)
     tstr   = "filename: %s\nversion:  %s\nn reads:  %d\nn refs:   " + \
         "%d\nn movies: %d\nn bases:  %d\navg rl:   %d\navg acc:  %g"
-
+    
     rl  = [ r.readLength for r in reader ]
     acc = [ r.accuracy for r in reader ]
-
-    return (tstr % (os.path.basename(reader.file.filename), reader.version, len(reader),
-                    len(reader.referenceInfoTable), len(reader.movieInfoTable), NP.sum(rl),
-                    NP.round(NP.mean(rl)), NP.round(NP.mean(acc), 4)))
-
+    
+    summaryStr = (tstr % (os.path.basename(reader.file.filename), reader.version, len(reader),
+                          len(reader.referenceInfoTable), len(reader.movieInfoTable), NP.sum(rl),
+                          NP.round(NP.mean(rl)), NP.round(NP.mean(acc), 4)))
+    eTbl = Tbl(nBases = Sum(ReadLength), avgReadLength = Mean(ReadLength), 
+               avgAccuracy = Mean(Accuracy))
+    
+    movieSummaryTxt = rec2txt(toRecArray(query(reader, what = eTbl, groupBy = Movie)),
+                              padding = 5, precision = 1)
+    
+    refSummaryTxt = rec2txt(toRecArray(query(reader, what = eTbl, groupBy = Reference)),
+                            padding = 5, precision = 1)
+   
+    return (summaryStr + 
+            ("\n\n\t Movie Summary:\n" + (movieSummaryTxt if movieSummary else "\n")) + 
+            ("\n\n\t Reference Summary:\n" + (refSummaryTxt if refSummary else "\n")))
+    
 
 def cmpH5Validate(inCmp):
     """Validate a cmp.h5 file"""

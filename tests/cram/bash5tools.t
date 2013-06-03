@@ -1,5 +1,5 @@
 
-  $ source $TESTDIR/portability.sh
+  $ . $TESTDIR/portability.sh
 
 Set up some vars ...
 
