@@ -1,3 +1,5 @@
+  $ source $TESTDIR/portability.sh
+
   $ INH5=`python -c "from pbcore import data ; print data.getCmpH5()['cmph5']"`
   $ CMD="cmph5tools.py stats $INH5"
   $ $CMD --what "ReadStart"
@@ -433,5 +435,5 @@
                                      800
 
   $ $CMD --what "UnrolledReadLength" --outFile out.csv
-  $ wc -l out.csv
-  85 out.csv
+  $ linecount out.csv
+  85

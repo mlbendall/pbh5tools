@@ -1,3 +1,5 @@
+  $ source $TESTDIR/portability.sh
+
   $ INH5=`python -c "from pbcore import data ; print data.getCmpH5()['cmph5']"`
   $ CMD="cmph5tools.py stats $INH5"
 
@@ -557,13 +559,13 @@
   204                               0.79
   153                               0.84
   $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD))" --groupBy "Movie * Reference" --outFile out.csv
-  $ wc -l out.csv
-  85 out.csv
+  $ linecount out.csv
+  85
   $ tail -n 1 out.csv
   m110818_075520_42141_c100129202555500000315043109121112_s2_p0:lambda_NEB3011,182,0.15384615384615385,0.34183041080013737
   $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD))" --groupBy "Movie * Reference" --where "Accuracy > .85" --outFile out.csv
-  $ wc -l out.csv
-  26 out.csv
+  $ linecount out.csv
+  26
   $ $CMD --what "(Accuracy,ReadLength)" --sortBy "Round(Accuracy, 2), ReadLength" --where "Movie == 'm110818_075520_42141_c100129202555500000315043109121112_s1_p0'"
   ReadLength                    1.0-NErrors/ReadLength*1.0
   116                                                 0.84
