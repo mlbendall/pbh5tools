@@ -465,7 +465,7 @@ class _AlignmentIdx(Factor):
 
 class _Barcode(Factor):
     def produce(self, cmpH5, idx):
-        return NP.array([cmpH5[i].barcode for i in idx])
+        return NP.array([cmpH5[i].barcodeName for i in idx])
 
 class SubSample(Metric):
     """boolean vector with true occuring at rate rate or nreads = n"""
