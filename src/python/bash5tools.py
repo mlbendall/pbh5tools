@@ -28,8 +28,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
-
-
 import os, os.path, sys, argparse, logging
 
 from pbcore.util.ToolRunner import PBToolRunner
@@ -37,7 +35,7 @@ from pbcore.io import (BasH5Reader,
                        FastaWriter,
                        FastqWriter)
 
-__version__ = "0.5.0"
+from pbtools.pbh5tools._version import __version__
 
 def _fileType(arg):
     """
@@ -79,7 +77,7 @@ class BasH5ToolsRunner(PBToolRunner):
             "--outFilePrefix", dest="outFilePrefix", default=None,
             help="output filename prefix [%(default)s]")
         self.parser.add_argument(
-            "--readType", dest="readType", default="subreads",
+            "--readType", dest="readType", default="",
             choices=["ccs", "subreads", "unrolled"],
             help="read type (ccs, subreads, or unrolled) [%(default)s]")
         self.parser.add_argument(
@@ -122,6 +120,16 @@ class BasH5ToolsRunner(PBToolRunner):
 
     def run(self):
         inBasH5 = BasH5Reader(self.args.inFile)
+        
+        if not inBasH5.hasConsensusBasecalls and self.args.readType == "ccs":
+            print "Unable to produce CCS reads from input file: %s" % self.args.inFile
+            sys.exit(-1)
+        
+        if not inBasH5.hasRawBasecalls and self.args.readType in ["unrolled", "subreads"]:
+            print "Unable to produce: %s reads from input file: %s" % (self.args.readType, 
+                                                                 self.args.inFile)
+            sys.exit(-1)
+
         movieName = inBasH5.movieName
         outFilePrefix = self.args.outFilePrefix or movieName
         outFilename = "%s.%s" % (outFilePrefix, self.args.outType)
@@ -134,8 +142,20 @@ class BasH5ToolsRunner(PBToolRunner):
             print "CSV output support not yet implemented!"
             sys.exit(-1)
 
-        readType = self.args.readType
-        for zmwRead in self.zmwReads(inBasH5, self.args.readType):
+        
+        if self.args.readType == '':
+            # choose based on file.
+            if inBasH5.hasRawBasecalls:
+                readType = 'subreads' 
+            elif inBasH5.hasConsensusBasecalls:
+                readType = 'ccs'
+            else:
+                print "Input bas.h5 file has neither CCS nor subread data"
+                sys.exit(-1)
+        else:
+            readType = self.args.readType
+
+        for zmwRead in self.zmwReads(inBasH5, readType):
             zmw = zmwRead.zmw
             #
             # Emit read if filters pass
