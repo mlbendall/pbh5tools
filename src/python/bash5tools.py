@@ -100,7 +100,7 @@ class BasH5ToolsRunner(PBToolRunner):
 
     def validateArgs(self):
         if not os.path.isfile(self.args.inFile):
-            self.parser.error("File %s does not exist!" % self.args.infile)
+            self.parser.error("File %s does not exist!" % self.args.inFile)
         if self.args.minReadScore > 1.0 or self.args.minReadScore < 0.0:
             self.parser.error("Minimum read score needs to be > 0.0 and < 1.0")
 
