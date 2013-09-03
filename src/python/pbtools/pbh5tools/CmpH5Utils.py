@@ -48,11 +48,18 @@ def deleteIfExists(ds, nm):
 
 def copyAttributes(inDs, outDs):
     for k in inDs.attrs.keys():
-        ## this has to do with a numpy problem.
-        if inDs.attrs[k].dtype == 'object':
+        logging.debug("copying attribute: %s" % k)
+        elt = inDs.attrs[k]
+        if isinstance(elt, basestring):
+            # h5py wants to simplify things down, so I think that this
+            # is a possibility.
+            newDtype = H5.special_dtype(vlen = str)
+        elif elt.dtype == 'object':
+            # this has to do with a numpy problem.
             newDtype = H5.special_dtype(vlen = str)
         else:
-            newDtype = inDs.attrs[k].dtype
+            newDtype = elt.dtype
+            
         outDs.attrs.create(k, inDs.attrs[k], dtype = newDtype)
 
 def copyDataset(absDsName, inCmp, outCmp, selection = None,
