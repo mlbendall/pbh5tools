@@ -38,7 +38,7 @@ import tempfile
 import h5py as H5
 import numpy as NP
 
-from pbcore.io.CmpH5Reader import *
+from pbcore.io import CmpH5Reader
 
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 from pbtools.pbh5tools.CmpH5Format import CmpH5Format
