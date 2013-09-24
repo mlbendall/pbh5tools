@@ -43,7 +43,6 @@ def _fileType(arg):
     """
     if   arg in ["fa", "fasta", "FASTA"]: return "fasta"
     elif arg in ["fq", "fastq", "FASTQ"]: return "fastq"
-    elif arg in ["csv"]:                  return "csv"
     else: raise ValueError("Unsupported output file format")
 
 
@@ -82,7 +81,7 @@ class BasH5ToolsRunner(PBToolRunner):
             help="read type (ccs, subreads, or unrolled) [%(default)s]")
         self.parser.add_argument(
             "--outType", dest="outType", default="fasta", type=_fileType,
-            help="output file type (fasta, fastq, or csv) [%(default)s]")
+            help="output file type (fasta, fastq) [%(default)s]")
 
         groupFilt = self.parser.add_argument_group("Read filtering arguments")
         groupFilt.add_argument(
@@ -122,12 +121,12 @@ class BasH5ToolsRunner(PBToolRunner):
         inBasH5 = BasH5Reader(self.args.inFile)
         
         if not inBasH5.hasConsensusBasecalls and self.args.readType == "ccs":
-            print "Unable to produce CCS reads from input file: %s" % self.args.inFile
+            print "Input file %s contains no CCS reads." % self.args.inFile
             sys.exit(-1)
         
         if not inBasH5.hasRawBasecalls and self.args.readType in ["unrolled", "subreads"]:
-            print "Unable to produce: %s reads from input file: %s" % (self.args.readType, 
-                                                                 self.args.inFile)
+            print "Input file %s contains no %s reads" % (self.args.inFile,
+                                                          self.args.readType)
             sys.exit(-1)
 
         movieName = inBasH5.movieName
@@ -138,11 +137,7 @@ class BasH5ToolsRunner(PBToolRunner):
             sink = FastaEmitter(outFilename)
         elif self.args.outType == "fastq":
             sink = FastqEmitter(outFilename)
-        else:
-            print "CSV output support not yet implemented!"
-            sys.exit(-1)
 
-        
         if self.args.readType == '':
             # choose based on file.
             if inBasH5.hasRawBasecalls:
