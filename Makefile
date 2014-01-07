@@ -41,3 +41,16 @@ clean: doc-clean
 	rm -rf dist/
 	rm -f nosetests.xml
 	make -C src/C clean
+
+pip-uninstall: $(shell which pip > /dev/null)
+	@pip freeze|grep 'pbtools.pbh5tools=='>/dev/null \
+      && pip uninstall -y pbtools.pbh5tools \
+      || echo -n ''
+	@pip freeze|grep 'pbh5tools=='>/dev/null \
+      && pip uninstall -y pbh5tools \
+      || echo -n ''
+
+pip-install: $(shell which pip > /dev/null)
+	@pip install --no-index \
+          --install-option="--install-scripts=$(PREFIX)/bin" \
+          ./
