@@ -43,7 +43,7 @@ clean: doc-clean
 	make -C src/C clean
 
 pip-install:
-	@which pip >& /dev/null
+	@which pip > /dev/null
 	@pip freeze|grep 'pbtools.pbh5tools=='>/dev/null \
       && pip uninstall -y pbtools.pbh5tools \
       || echo -n ''
