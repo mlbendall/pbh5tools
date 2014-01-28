@@ -198,7 +198,7 @@ def csvformat_factory(format):
     format = copy.deepcopy(format)
     if isinstance(format, FormatFloat):
         format.scale = 1. # override scaling for storage
-        format.fmt = '%r'
+    #    format.fmt = '%r'
     return format
 
 
@@ -215,8 +215,9 @@ def rec2csv(r, fname, delimiter=',', formatd=None, missing='',
     *withheader*: if withheader is False, do not write the attribute
       names in the first row
 
-    for formatd type FormatFloat, we override the precision to store
-    full precision floats in the CSV file
+    for formatd type FormatFloat, we override scaling in CSV but the
+      precision is unchanged
+    
 
 
     .. seealso::

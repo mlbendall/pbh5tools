@@ -587,7 +587,7 @@
   $ linecount out.csv
   85
   $ tail -n 1 out.csv
-  m110818_075520_42141_c100129202555500000315043109121112_s2_p0:lambda_NEB3011,182,0.15384615384615385,0.34183041080013737
+  m110818_075520_42141_c100129202555500000315043109121112_s2_p0:lambda_NEB3011,182,0.1538,0.3418
   $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD))" --groupBy "Movie * Reference" --where "Accuracy > .85" --outFile out.csv
   $ linecount out.csv
   26
