@@ -466,6 +466,20 @@ class _AlignmentIdx(Factor):
 class _Barcode(Factor):
     def produce(self, cmpH5, idx):
         return NP.array([cmpH5[i].barcodeName for i in idx])
+         
+class _AverageBarcodeScore(Metric):
+    def produce(self, cmpH5, idx):
+        bestScore = cmpH5.file[ '/AlnInfo/Barcode' ][idx,2].astype(float)
+        nScored   = cmpH5.file[ '/AlnInfo/Barcode' ][idx,0]
+        return bestScore / nScored
+        
+class _MapQV(Metric):
+    def produce(self, cmpH5, idx):
+        return cmpH5.alignmentIndex.MapQV[idx]
+
+class _WhiteList(Factor):
+    def produce(self, cmpH5, idx):
+        return NP.array( [ '%s/%i' % ( cmpH5[i].movieInfo[1], cmpH5[i].HoleNumber ) for i in idx ] )
 
 class SubSample(Metric):
     """boolean vector with true occuring at rate rate or nreads = n"""
@@ -508,6 +522,9 @@ TemplateStart       = _TemplateStart()
 ReadEnd             = _ReadEnd()
 ReadStart           = _ReadStart()
 Barcode             = _Barcode()
+MapQV               = _MapQV()
+WhiteList           = _WhiteList()
+AverageBarcodeScore = _AverageBarcodeScore()
 
 MoleculeReadStart   = _MoleculeReadStart()
 MinSubreadLength    = _MinSubreadLength()

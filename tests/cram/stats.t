@@ -440,6 +440,25 @@
   m110818_075520_42141_c100129202555500000315043109121112_s2_p0:lambda_NEB3011                    210                                0.18                    0.25                    2000                          
   m110818_075520_42141_c100129202555500000315043109121112_s2_p0:lambda_NEB3011                    174                                0.12                    0.20                    8                             
   m110818_075520_42141_c100129202555500000315043109121112_s2_p0:lambda_NEB3011                    182                                0.15                    0.34                    8                             
+  $ $CMD --what "Tbl(readlength = ReadLength, mapqv = MapQV)" --where "(ReadLength > 400) & (MapQV > 0)"
+  readlength                    mapqv
+  404                           254                      
+  684                           254                      
+  674                           254                      
+  486                           254                      
+  571                           254                      
+  542                           254                      
+  446                           254                      
+  472                           254                      
+  444                           254                      
+  425                           254                      
+  697                           254                      
+  674                           254                      
+  516                           254                      
+  443                           254                      
+  $ $CMD --what WhiteList --where "(ReadLength > 400) & (MapQV > 0)" --outFile out.csv
+  $ tail -1 out.csv
+  m110818_075520_42141_c100129202555500000315043109121112_s1_p0/2003
   $ SCMD="cmph5tools.py select $INH5"
   $ $SCMD --where "(ReadLength > 100) & (Accuracy < .8)" --groupBy "Movie"
   $ cmph5tools.py summarize *.cmp.h5
