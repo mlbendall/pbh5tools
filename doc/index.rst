@@ -135,8 +135,12 @@ is running via printing in stdout: ::
 
     cmph5tools.py <toolname> --info <other arguments>
 
-More examples are available in the examples.t file.
+.. toctree::
+   :maxdepth: 2
 
+   cmph5tools-examples
+   
+   
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
