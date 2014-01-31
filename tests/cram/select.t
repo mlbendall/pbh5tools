@@ -37,7 +37,7 @@ Test where clause produces correct subset
   True                                      
   True                                      
 Test stdout same as in csv output                                   
-  $ $CMD --what "UnrolledReadLength" | wc -l
+  $ $CMD --what "UnrolledReadLength" | linecount
   85
 
   $ $CMD --what "UnrolledReadLength" --outFile out.csv

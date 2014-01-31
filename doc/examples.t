@@ -64,6 +64,9 @@ take 50% of the reads
   Strand\t (esc)
   AlignmentIdx\t (esc)
   Barcode\t (esc)
+  AverageBarcodeScore\t (esc)
+  MapQV\t (esc)
+  WhiteList\t (esc)
   SubSample[rate, n]
   \tboolean vector with true occuring at rate rate or nreads = n (esc)
   
