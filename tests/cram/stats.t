@@ -5,14 +5,14 @@ Set up inputs and basic command string.
   $ CMD="cmph5tools.py stats $INH5"
 
 Print Readlength to stdout
-#  $ $CMD --what "ReadLength" | head -5
+#  $ $CMD --what "ReadLength" | sed -n 1,5p
 #  ReadLength
 #  301                           
 #  404                           
 #  342                           
 #  254                           
 Print multiple columns                        
-  $ $CMD --what "Tbl(readlength = ReadLength, accuracy = Accuracy)" | head -5
+  $ $CMD --what "Tbl(readlength = ReadLength, accuracy = Accuracy)" | sed -n 1,5p
   readlength                    accuracy
   301                               0.84
   404                               0.82
@@ -23,7 +23,7 @@ Aggregate statistics on entire dataset
                          mrl                    macc
                       481.80                    0.83
 Access movie name for each alignment
-  $ $CMD --what "Movie" | head -5
+  $ $CMD --what "Movie" | sed -n 1,5p
                          Movie
   m110818_075520_42141_c100129202555500000315043109121112_s2_p0
   m110818_075520_42141_c100129202555500000315043109121112_s2_p0
@@ -44,21 +44,21 @@ Aggregate statistics grouped by multiple factors
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    547.80                    0.84
   m110818_075520_42141_c100129202555500000315043109121112_s2_p0:lambda_NEB3011                    445.20                    0.83
 Per-alignment metrics grouped by multiple factors
-  $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD))" --groupBy "Movie * Reference" | head -5
+  $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD))" --groupBy "Movie * Reference" | sed -n 1,5p
                          Group                    readlength                    errorRate                     ipd
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    342                                0.13                    0.18
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    254                                0.18                    0.25
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    267                                0.16                    0.15
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    354                                0.16                    0.24
 Per-alignment metrics grouped and filtered 
-  $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD), holeNumber = HoleNumber)" --groupBy "Movie * Reference" --where "HoleNumber != 9" | head -5
+  $ $CMD --what "Tbl(readlength = ReadLength, errorRate = 1 - Accuracy, ipd = Mean(IPD), holeNumber = HoleNumber)" --groupBy "Movie * Reference" --where "HoleNumber != 9" | sed -n 1,5p
                          Group                    readlength                    errorRate                     ipd                    holeNumber
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    342                                0.13                    0.18                    2001                          
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    254                                0.18                    0.25                    2001                          
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    267                                0.16                    0.15                    4009                          
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0:lambda_NEB3011                    354                                0.16                    0.24                    2008                          
 Check MapQV output
-  $ $CMD --what "Tbl(readlength = ReadLength, mapqv = MapQV)" --where "(ReadLength > 400) & (MapQV > 0)" | head -5
+  $ $CMD --what "Tbl(readlength = ReadLength, mapqv = MapQV)" --where "(ReadLength > 400) & (MapQV > 0)" | sed -n 1,5p
   readlength                    mapqv
   404                           254                      
   684                           254                      
@@ -137,7 +137,7 @@ Make new cmp.h5 with subset of indexed alignments
           Group     nBases     avgAccuracy     avgReadLength
   lambda_NEB3011     1267               0.8             316.8
 Check that default 'what' clause prints readlength and accuracy (all reads)
-  $ cmph5tools.py stats $INH5 | head -5
+  $ cmph5tools.py stats $INH5 | sed -n 1,5p
   readLength                    accuracy
   301                               0.84
   404                               0.82
@@ -154,7 +154,7 @@ Export to csv file (2)
   $ linecount out.csv
   26
 Check sortBy clause -- note order of sort metrics is not deterministic
-  $ $CMD --what "(Accuracy,ReadLength)" --sortBy "Round(Accuracy, 2), ReadLength" --where "Movie == 'm110818_075520_42141_c100129202555500000315043109121112_s1_p0'" | head -10
+  $ $CMD --what "(Accuracy,ReadLength)" --sortBy "Round(Accuracy, 2), ReadLength" --where "Movie == 'm110818_075520_42141_c100129202555500000315043109121112_s1_p0'" | sed -n 1,10p
   ReadLength                    1.0-NErrors/ReadLength*1.0
   116                                                 0.84
   128                                                 0.80
@@ -166,7 +166,7 @@ Check sortBy clause -- note order of sort metrics is not deterministic
   250                                                 0.80
   254                                                 0.82
 Check sortBy and grouping (no aggregate)
-  $ $CMD --what "(Accuracy, )" --sortBy ReadLength --groupBy Movie | head -5
+  $ $CMD --what "(Accuracy, )" --sortBy ReadLength --groupBy Movie | sed -n 1,5p
                          Group                    1.0-NErrors/ReadLength*1.0
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0                                          0.84
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0                                          0.80
@@ -183,7 +183,7 @@ Check arithmetic in what clause
   m110818_075520_42141_c100129202555500000315043109121112_s1_p0                                                                                    2.56
   m110818_075520_42141_c100129202555500000315043109121112_s2_p0                                                                                    2.22
 Output columns from tuple and group by multiple factors (sorting within group)
-  $ $CMD --what "(Sum(ReadLength), Mean(Accuracy))" --sortBy ReadLength --groupBy HoleNumber*Movie | head -5
+  $ $CMD --what "(Sum(ReadLength), Mean(Accuracy))" --sortBy ReadLength --groupBy HoleNumber*Movie | sed -n 1,5p
                          Group                    Mean(1.0-NErrors/ReadLength*1.0)                    Sum(ReadLength)
   1000:m110818_075520_42141_c100129202555500000315043109121112_s1_p0                                                0.83                    811                                
   1000:m110818_075520_42141_c100129202555500000315043109121112_s2_p0                                                0.82                    1358                               
