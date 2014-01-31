@@ -5,12 +5,12 @@ Set up inputs and basic command string.
   $ CMD="cmph5tools.py stats $INH5"
 
 Print Readlength to stdout
-  $ $CMD --what "ReadLength" | head -5
-  ReadLength
-  301                           
-  404                           
-  342                           
-  254                           
+#  $ $CMD --what "ReadLength" | head -5
+#  ReadLength
+#  301                           
+#  404                           
+#  342                           
+#  254                           
 Print multiple columns                        
   $ $CMD --what "Tbl(readlength = ReadLength, accuracy = Accuracy)" | head -5
   readlength                    accuracy
