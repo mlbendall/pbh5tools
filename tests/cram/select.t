@@ -1,7 +1,7 @@
   $ . $TESTDIR/portability.sh
 
 Set up basic commands
-  $ INH5=`python -c "from pbcore import data ; print data.getCmpH5()['cmph5']"`
+  $ INH5=`python -c "from pbcore import data ; print data.getCmpH5()"`
   $ CMD="cmph5tools.py stats $INH5"
 Test basic output
   $ $CMD --what "ReadStart" | head -5

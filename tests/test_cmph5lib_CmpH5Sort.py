@@ -58,7 +58,7 @@ def compare_implementations(size, coverage = 1):
 
 class TestCmpH5Format:
     def test___init__(self):
-        cmpH5_format = CS.CmpH5Format(h.File(data.getCmpH5()['cmph5'],"r"))
+        cmpH5_format = CS.CmpH5Format(h.File(data.getCmpH5(),"r"))
         assert_equal(cmpH5_format.ALN_INFO, 'AlnInfo')
 
 class TestNumberWithinRange:
@@ -110,7 +110,7 @@ class TestGetOverlappingRanges:
 
 class TestGetReadsInRange:
     def __init__(self):
-        self.h5FileName = data.getCmpH5()['cmph5']
+        self.h5FileName = data.getCmpH5()
         self.cmpH5 = CmpH5Reader(self.h5FileName)
         
     def test_get_reads_in_range(self):

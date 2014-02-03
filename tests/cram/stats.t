@@ -1,7 +1,7 @@
   $ . $TESTDIR/portability.sh
 
 Set up inputs and basic command string.
-  $ INH5=`python -c "from pbcore import data ; print data.getCmpH5()['cmph5']"`
+  $ INH5=`python -c "from pbcore import data ; print data.getCmpH5()"`
   $ CMD="cmph5tools.py stats $INH5"
 
 Print Readlength to stdout

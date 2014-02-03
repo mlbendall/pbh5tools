@@ -1,4 +1,4 @@
-  $ export INH5=`python -c "from pbcore import data ; print data.getCmpH5()['cmph5']"`
+  $ export INH5=`python -c "from pbcore import data ; print data.getCmpH5()"`
   $ cmph5tools.py sort --deep --outFile tmp.cmp.h5 $INH5
   $ echo $?  
   0
