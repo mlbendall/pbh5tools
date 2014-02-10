@@ -472,7 +472,7 @@ class _AverageBarcodeScore(Metric):
         bestScore = cmpH5.file[ '/AlnInfo/Barcode' ][idx,2].astype(float)
         nScored   = cmpH5.file[ '/AlnInfo/Barcode' ][idx,0]
         return bestScore / nScored
-        
+
 class _MapQV(Metric):
     def produce(self, cmpH5, idx):
         return cmpH5.alignmentIndex.MapQV[idx]
@@ -492,7 +492,7 @@ class SubSample(Metric):
             return NP.in1d(idx, NP.floor(NP.random.uniform(0, len(idx), self.n)))
         else:
             return NP.array(NP.random.binomial(1, self.rate, len(idx)), dtype = bool)
-
+            
 ###############################################################################
 ##
 ## Define the core metrics, try to define all metrics in terms of some
@@ -534,13 +534,13 @@ UnrolledReadLength  = _UnrolledReadLength()
 DefaultSortBy       = Tbl(alignmentIdx = AlignmentIdx)
 
 def query(reader, what = DefaultWhat, where = DefaultWhere,
-          groupBy = DefaultGroupBy, sortBy = DefaultSortBy):
+          groupBy = DefaultGroupBy, sortBy = DefaultSortBy, limit = None):
     idxs = NP.where(where.eval(reader, range(0, len(reader))))[0]
     groupBy = groupBy.eval(reader, idxs)
     results = {}
     
     for k,v in split(idxs, groupBy).items():
         sortVals = sortBy.eval(reader, v)
-        sortIdxs = v[NP.lexsort(map(lambda z : z[1], sortVals)[::-1])]
+        sortIdxs = v[NP.lexsort(map(lambda z : z[1], sortVals)[::-1])][:limit]
         results[k] = what.eval(reader, sortIdxs)
     return results

@@ -147,6 +147,8 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                             default = None)
         parser.add_argument('--sortBy', metavar='sortBy-expression',
                             default = None)
+        parser.add_argument('--limit', metavar='maximum-records', type=int,
+                            default = None)
         parser.add_argument('inCmp', metavar='input.cmp.h5', help='input filename')
 
         # listMetrics
@@ -193,6 +195,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                            whereStr = self.args.where,
                            groupByStr = self.args.groupBy, 
                            sortByStr = self.args.sortBy,
+                           limit     = self.args.limit,
                            outFile =  self.args.outCsv)
 
             elif cmd == 'listMetrics':
