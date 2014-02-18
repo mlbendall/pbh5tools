@@ -116,6 +116,24 @@ def cmpH5Merge(inFiles, outFile):
         if not allEqual([z[fmt.REF_INFO]['MD5'].value for z in inCmps]):
             raise PBH5ToolsException("merge", "Different reference sequences.")
 
+        # Remove cmp.h5 files which have no alignment
+        inNonEmptyCmps = []
+        for f in inCmps:
+            alnNum = 0
+            try:
+                alnNum = f['/AlnInfo/AlnIndex'].shape[0]
+                if alnNum > 0:
+                    inNonEmptyCmps.append(f)
+                else:
+                    logging.warn("Skipping emtpy file: %s" % f.filename)
+            except Exception:
+                logging.warn("Skipping emtpy file: %s" % f.filename)
+
+        inCmps = inNonEmptyCmps
+
+        if not len(inCmps):
+            raise PBH5ToolsException("merge", "No non-empty files to merge.")
+
         # check for consistency of things like barcode and edna/z score
         # datasets.
         hasBarcode = all([ fmt.BARCODE_INFO in z for z in inCmps ])
@@ -272,6 +290,4 @@ def cmpH5Merge(inFiles, outFile):
         except:
             pass
         raise
-
-
 
