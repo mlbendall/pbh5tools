@@ -103,22 +103,25 @@ def _fileExists(fileName):
 
 
 def cmpH5Merge(inFiles, outFile):
-    """
-    :param inFiles: List of cmp.h5 files
-    :param outFile: path of output cmp.h5
 
-    """
+    # input validation. This is kinda clunky
+    inps = {_fileExists(f) for f in inFiles}
 
-    # basic validation
-    inPaths = {_fileExists(f) for f in inFiles}
-    if outFile in inPaths:
-        raise ValueError("File '{i}' specified as both an input and output.".format(i=outFile))
+    # Not sure if this is the expected behavior
+    if os.path.isabs(outFile):
+        outp = outFile
+    else:
+        outp = os.path.join(os.getcwd(), outFile)
 
+    if outp in inps:
+        raise IOError("Outfile {f} was provided as an input file.".format(f=outp))
+
+    # start the analysis
     try:
         logging.debug("Processing:\n\t" + "\t\n".join(inFiles))
         logging.debug("Writing to:" + str(outFile))
 
-        inCmps = [H5.File(z, 'r') for z in inPaths]
+        inCmps = [H5.File(z, 'r') for z in inFiles]
         outCmp = H5.File(outFile, 'w')
 
         logging.debug("Loaded input and output h5 files.")
@@ -146,8 +149,6 @@ def cmpH5Merge(inFiles, outFile):
 
         inCmps = inNonEmptyCmps
 
-        # MK notes: This is wrong to me. There should be a requirement that
-        # there is more than one file, otherwise you're just copying a file
         if not len(inCmps):
             raise PBH5ToolsException("merge", "No non-empty files to merge.")
 
@@ -190,10 +191,7 @@ def cmpH5Merge(inFiles, outFile):
         alnIDBegin = 1
 
         # either way you structure the loops annoyances arise.
-        # Need to add this index to enable closing the file handle of each
-        # file except the first file, which used in the after the files are
-        # iterated over. This probably needs to be rethought.
-        for i_cmpH5, cmpH5 in enumerate(inCmps):
+        for cmpH5 in inCmps:
             logging.debug("Processing: %s" % cmpH5.filename)
 
             # we are going to map the ref ids into the globaly unique
@@ -208,7 +206,7 @@ def cmpH5Merge(inFiles, outFile):
                 if len(newID) == 1:
                     movieMap[oid] = newID[0]
                 else:
-                    raise ValueError("Error processing movie {f}".format(f=cmpH5.filename))
+                    raise PBH5ToolsException("merge", "Error processing movies.")
 
             for rID in refInfoIDs:
                 if rID not in refIDMap.values():
@@ -279,7 +277,6 @@ def cmpH5Merge(inFiles, outFile):
                              NP.array([npth for a,npth,b in newAlnGroup],
                                       dtype = cmpH5[fmt.ALN_GROUP_PATH].dtype))
 
-
         # now depending on what references had alignments we'll make the
         # new REF_GROUP.
         uRefsWithAlignments = NP.unique(outCmp[fmt.ALN_INDEX][:,fmt.REF_ID])
@@ -300,14 +297,10 @@ def cmpH5Merge(inFiles, outFile):
               (outCmp[fmt.ALN_INDEX][:,fmt.MOVIE_ID] - 1)) +
              outCmp[fmt.ALN_INDEX][:,fmt.HOLE_NUMBER] + 1)
 
-        # close all the input cmp.h5 files
-        for c in inCmps:
-            c.close()
-
         # close the sucker.
         outCmp.close()
 
-    except Exception as e:
+    except Exception, e:
         try:
             # remove the file as it won't be correct
             if os.path.exists(outFile):
@@ -315,4 +308,3 @@ def cmpH5Merge(inFiles, outFile):
         except:
             pass
         raise
-

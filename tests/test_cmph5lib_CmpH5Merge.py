@@ -30,6 +30,8 @@ class _TestBase(unittest.TestCase):
             if os.path.exists(cls.dirName):
                 if cls.DELETE_TEMP_DIR:
                     shutil.rmtree(cls.dirName)
+                else:
+                    log.debug("running in debug mode. Not deleting temp dir {d}".format(d=cls.dirName))
 
     def _getTempFile(self, suffix=None):
         """Write temp files to central location"""
@@ -69,6 +71,14 @@ class TestCmpH5Merge(_TestBase):
         n = _getNAlignments(outputFile)
         correctNAlignments = 2764
         self.assertEqual(n, correctNAlignments)
+
+
+class TestMergeException(_TestBase):
+    def test_output_file_in_inputs(self):
+        inputFiles = [_CMP_H5]
+        outputFile = _CMP_H5
+        with self.assertRaises(IOError) as e:
+            cmpH5Merge(inputFiles, outputFile)
 
 
 class TestCmpH5Select(_TestBase):
