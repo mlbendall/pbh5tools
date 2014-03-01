@@ -29,18 +29,14 @@
 #################################################################################
 
 import os
-import sys
-import shutil
-import datetime
 import logging
-import tempfile
 
 import h5py as H5
 import numpy as NP
 
 from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
 from pbtools.pbh5tools.CmpH5Format import CmpH5Format
-from pbtools.pbh5tools.CmpH5Utils import *
+from pbtools.pbh5tools.CmpH5Utils import copyAttributes, deleteAttrIfExists
 
 def makeRefName(rID):
     return "ref%06d" % rID
@@ -98,18 +94,37 @@ def makeOrAppend(outCmp, dsName, newDta, chunks = True):
             d.resize((e + newDta.shape[0],))
             d[e:(e + newDta.shape[0])] = newDta
 
+
+def _fileExists(fileName):
+    if os.path.isfile(fileName):
+        return os.path.abspath(fileName)
+    else:
+        raise IOError("Unable to find {f}".format(f=fileName))
+
+
 def cmpH5Merge(inFiles, outFile):
+    """
+    :param inFiles: List of cmp.h5 files
+    :param outFile: path of output cmp.h5
+
+    """
+
+    # basic validation
+    inPaths = {_fileExists(f) for f in inFiles}
+    if outFile in inPaths:
+        raise ValueError("File '{i}' specified as both an input and output.".format(i=outFile))
+
     try:
         logging.debug("Processing:\n\t" + "\t\n".join(inFiles))
         logging.debug("Writing to:" + str(outFile))
 
-        inCmps = [H5.File(z, 'r') for z in inFiles]
+        inCmps = [H5.File(z, 'r') for z in inPaths]
         outCmp = H5.File(outFile, 'w')
 
         logging.debug("Loaded input and output h5 files.")
 
         if not allEqual([CmpH5Format(z).VERSION for z in inCmps]):
-            raise PBH5ToolsException("Different cmp.h5 versions.")
+            raise PBH5ToolsException("merge", "Different cmp.h5 versions.")
 
         fmt = CmpH5Format(inCmps[0])
 
@@ -131,6 +146,8 @@ def cmpH5Merge(inFiles, outFile):
 
         inCmps = inNonEmptyCmps
 
+        # MK notes: This is wrong to me. There should be a requirement that
+        # there is more than one file, otherwise you're just copying a file
         if not len(inCmps):
             raise PBH5ToolsException("merge", "No non-empty files to merge.")
 
@@ -173,7 +190,10 @@ def cmpH5Merge(inFiles, outFile):
         alnIDBegin = 1
 
         # either way you structure the loops annoyances arise.
-        for cmpH5 in inCmps:
+        # Need to add this index to enable closing the file handle of each
+        # file except the first file, which used in the after the files are
+        # iterated over. This probably needs to be rethought.
+        for i_cmpH5, cmpH5 in enumerate(inCmps):
             logging.debug("Processing: %s" % cmpH5.filename)
 
             # we are going to map the ref ids into the globaly unique
@@ -188,7 +208,7 @@ def cmpH5Merge(inFiles, outFile):
                 if len(newID) == 1:
                     movieMap[oid] = newID[0]
                 else:
-                    raise PBH5Exception("Error processing movies.")
+                    raise ValueError("Error processing movie {f}".format(f=cmpH5.filename))
 
             for rID in refInfoIDs:
                 if rID not in refIDMap.values():
@@ -259,6 +279,11 @@ def cmpH5Merge(inFiles, outFile):
                              NP.array([npth for a,npth,b in newAlnGroup],
                                       dtype = cmpH5[fmt.ALN_GROUP_PATH].dtype))
 
+                # see the notes at the top of the loop
+                if i_cmpH5 != 0:
+                    cmpH5.close()
+
+
         # now depending on what references had alignments we'll make the
         # new REF_GROUP.
         uRefsWithAlignments = NP.unique(outCmp[fmt.ALN_INDEX][:,fmt.REF_ID])
@@ -271,6 +296,9 @@ def cmpH5Merge(inFiles, outFile):
         outCmp.create_dataset(fmt.REF_GROUP_INFO_ID, data = uRefsWithAlignments,
                               dtype = inCmps[0][fmt.REF_GROUP_INFO_ID].dtype)
 
+        # see notes at top of loop
+        inCmps[0].close()
+
         # reset the IDs
         outCmp[fmt.ALN_INDEX][:,fmt.ID] = range(1, outCmp[fmt.ALN_INDEX].shape[0] + 1)
         # reset the molecule IDs
@@ -282,7 +310,7 @@ def cmpH5Merge(inFiles, outFile):
         # close the sucker.
         outCmp.close()
 
-    except Exception, e:
+    except Exception as e:
         try:
             # remove the file as it won't be correct
             if os.path.exists(outFile):
