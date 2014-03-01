@@ -279,10 +279,6 @@ def cmpH5Merge(inFiles, outFile):
                              NP.array([npth for a,npth,b in newAlnGroup],
                                       dtype = cmpH5[fmt.ALN_GROUP_PATH].dtype))
 
-                # see the notes at the top of the loop
-                if i_cmpH5 != 0:
-                    cmpH5.close()
-
 
         # now depending on what references had alignments we'll make the
         # new REF_GROUP.
@@ -296,9 +292,6 @@ def cmpH5Merge(inFiles, outFile):
         outCmp.create_dataset(fmt.REF_GROUP_INFO_ID, data = uRefsWithAlignments,
                               dtype = inCmps[0][fmt.REF_GROUP_INFO_ID].dtype)
 
-        # see notes at top of loop
-        inCmps[0].close()
-
         # reset the IDs
         outCmp[fmt.ALN_INDEX][:,fmt.ID] = range(1, outCmp[fmt.ALN_INDEX].shape[0] + 1)
         # reset the molecule IDs
@@ -306,6 +299,10 @@ def cmpH5Merge(inFiles, outFile):
             ((NP.max(outCmp[fmt.ALN_INDEX][:,fmt.MOLECULE_ID]) *
               (outCmp[fmt.ALN_INDEX][:,fmt.MOVIE_ID] - 1)) +
              outCmp[fmt.ALN_INDEX][:,fmt.HOLE_NUMBER] + 1)
+
+        # close all the input cmp.h5 files
+        for c in inCmps:
+            c.close()
 
         # close the sucker.
         outCmp.close()
