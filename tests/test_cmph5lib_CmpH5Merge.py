@@ -77,7 +77,7 @@ class TestMergeException(_TestBase):
     def test_output_file_in_inputs(self):
         inputFiles = [_CMP_H5]
         outputFile = _CMP_H5
-        with self.assertRaises(IOError) as e:
+        with self.assertRaises(ValueError) as e:
             cmpH5Merge(inputFiles, outputFile)
 
 

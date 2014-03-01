@@ -114,7 +114,7 @@ def cmpH5Merge(inFiles, outFile):
         outp = os.path.join(os.getcwd(), outFile)
 
     if outp in inps:
-        raise IOError("Outfile {f} was provided as an input file.".format(f=outp))
+        raise ValueError("Outfile {f} was provided as an input file.".format(f=outp))
 
     # start the analysis
     try:
