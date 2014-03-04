@@ -44,11 +44,8 @@ clean: doc-clean
 
 pip-install:
 	@which pip > /dev/null
-	@pip freeze|grep 'pbtools.pbh5tools=='>/dev/null \
-      && pip uninstall -y pbtools.pbh5tools \
-      && pip uninstall -y pbh5tools \
-      || echo -n ''
 	@pip freeze|grep 'pbh5tools=='>/dev/null \
+      && pip uninstall -y pbtools.pbh5tools \
       && pip uninstall -y pbh5tools \
       || echo -n ''
 	@pip install --no-index \
