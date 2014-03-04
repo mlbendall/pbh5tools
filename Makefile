@@ -40,7 +40,6 @@ clean: doc-clean
 	find . -name "*.pyc" | xargs rm -rf;\
 	rm -rf dist/
 	rm -f nosetests.xml
-	make -C src/C clean
 
 pip-install:
 	@which pip > /dev/null
