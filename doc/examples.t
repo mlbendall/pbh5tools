@@ -20,16 +20,16 @@ take 50% of the reads
 
   $ cmph5tools.py stats --what "Tbl(q = Percentile(ReadLength, 90), m = Median(Accuracy))" \
   > --groupBy Barcode $INCMP | tail
-                  bc_88--bc_88                    486.40                    0.91
-                  bc_89--bc_89                    561.00                    0.91
-                    bc_9--bc_9                    479.80                    0.90
-                  bc_90--bc_90                    563.60                    0.89
-                  bc_91--bc_91                    554.60                    0.91
-                  bc_92--bc_92                    523.00                    0.90
-                  bc_93--bc_93                    542.00                    0.90
-                  bc_94--bc_94                    518.00                    0.90
-                  bc_95--bc_95                    512.20                    0.91
-                  bc_96--bc_96                    609.60                    0.92
+                    F_44--R_44                    516.80                    0.90
+                    F_45--R_45                    534.60                    0.90
+                    F_46--R_46                    517.80                    0.90
+                    F_47--R_47                    515.80                    0.91
+                    F_48--R_48                    624.20                    0.91
+                      F_5--R_5                    571.60                    0.90
+                      F_6--R_6                    507.90                    0.90
+                      F_7--R_7                    572.40                    0.90
+                      F_8--R_8                    574.40                    0.91
+                      F_9--R_9                    485.60                    0.90
 
 
 ## Example 3: query the package to determine the available metrics and statistics
@@ -83,25 +83,26 @@ take 50% of the reads
 ## Example 4: Familiar SQL-like syntax
 
   $ cmph5tools.py stats --what "Tbl(a=Accuracy,b=Barcode)" \
-  > --where "Barcode == 'bc_78--bc_78'" \
+  > --where "Barcode == 'F_28--R_28'" \
   > --groupBy Reference $INCMP
-                         Group                       a                               b
-                  MET_600_t2_2                    0.94                    bc_78--bc_78
-                  MET_600_t2_2                    0.90                    bc_78--bc_78
-                  MET_600_t2_2                    0.90                    bc_78--bc_78
-                  MET_600_t2_2                    0.87                    bc_78--bc_78
-                  MET_600_t2_2                    0.89                    bc_78--bc_78
-                  MET_600_t2_2                    0.85                    bc_78--bc_78
-                  MET_600_t2_2                    0.82                    bc_78--bc_78
-                  MET_600_t2_2                    0.96                    bc_78--bc_78
+                         Group                       a                             b
+                EGFR_600_t29_1                    0.91                    F_28--R_28
+                EGFR_600_t29_1                    0.91                    F_28--R_28
+                EGFR_600_t29_1                    0.95                    F_28--R_28
+                EGFR_600_t29_1                    0.93                    F_28--R_28
+                EGFR_600_t29_1                    0.91                    F_28--R_28
+                EGFR_600_t29_1                    0.90                    F_28--R_28
+                EGFR_600_t29_1                    0.94                    F_28--R_28
+                EGFR_600_t29_1                    0.93                    F_28--R_28
+                 EGFR_600_t9_1                    0.86                    F_28--R_28
 
 ## Example 5: Familiar SQL-like functions
 
   $ cmph5tools.py stats --what "Count(Reference)" \
-  > --where "Barcode == 'bc_78--bc_78'" \
+  > --where "Barcode == 'F_10--R_10'" \
   > --groupBy Reference $INCMP
                          Group                    Count(Reference)
-                  MET_600_t2_2                                   8
+                EGFR_600_t11_1                                  62
 
 ## Handling IPD, PulseWidth, and Base-level Metrics
 
@@ -109,11 +110,16 @@ A constant _hurdle_ with cmp.h5 is dealing with the different sized
 data, i.e., base-level data and alignment-level data. The stats tool
 provides convenience functions for dealing with this
 
-  $ cmph5tools.py stats --where "(Barcode == 'bc_78--bc_78') & (Accuracy > .95)" \
+  $ cmph5tools.py stats --where "(Barcode == 'F_10--R_10') & (Accuracy > .95)" \
   > --what "Tbl(idx = AlignmentIdx, ipd = Median(IPD), pw = Median(PulseWidth))" \
   > $INCMP
-                       ipd                       pw                     idx
-                      9.00                    12.00                    1683
+                        ipd                       pw                    idx
+                      15.50                    11.50                    562
+                       9.00                    10.00                    563
+                      11.00                    10.00                    589
+                      13.00                    11.00                    603
+                      14.00                    10.50                    626
+                       8.00                    13.00                    627
 
 **NOTE:** The '(' surrounding the clauses in the where predicate are
 
@@ -189,12 +195,12 @@ selection to produce plots on very arbitrary splits.
 
 ## Selection
   $ cmph5tools.py select --groupBy Barcode \
-  > --where "(Barcode == 'bc_42--bc_42') | (Barcode == 'bc_28--bc_28')" $INCMP
-  $ cmph5tools.py merge --outFile merged.cmp.h5 bc_42--bc_42.cmp.h5 bc_28--bc_28.cmp.h5
+  > --where "(Barcode == 'F_42--R_42') | (Barcode == 'F_10--R_10')" $INCMP
+  $ cmph5tools.py merge --outFile merged.cmp.h5 F_42--R_42.cmp.h5 F_10--R_10.cmp.h5
   $ cmph5tools.py stats --what "Count(Reference)" --groupBy Barcode merged.cmp.h5
                          Group                    Count(Reference)
-                  bc_28--bc_28                                   6
-                  bc_42--bc_42                                  65
+                    F_10--R_10                                  62
+                    F_42--R_42                                  76
 
 
 **NOTE:** One of the reasons that the cmp.h5 file format is appealing
