@@ -6,7 +6,7 @@ import h5py as h
 from numpy import *
 
 from pbcore import data
-import pbtools.pbh5tools.CmpH5Sort as CS
+import pbh5tools.CmpH5Sort as CS
 import pbcore.io.rangeQueries as RQ
 from pbcore.io import CmpH5Reader
 

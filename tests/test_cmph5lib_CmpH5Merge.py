@@ -6,8 +6,8 @@ import shutil
 
 from pbcore.io.CmpH5IO import CmpH5Reader
 import sys
-from pbtools.pbh5tools.CmpH5Select import cmpH5Select
-from pbtools.pbh5tools.CmpH5Merge import cmpH5Merge
+from pbh5tools.CmpH5Select import cmpH5Select
+from pbh5tools.CmpH5Merge import cmpH5Merge
 
 _DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'etc')
 _CMP_H5 = os.path.join(_DATA_DIR, 'aligned_reads_ss.cmp.h5')
@@ -36,7 +36,6 @@ class _TestBase(unittest.TestCase):
     def _getTempFile(self, suffix=None):
         """Write temp files to central location"""
         f = tempfile.NamedTemporaryFile(dir=self.dirName, suffix=suffix)
-        f.close()
         return f.name
 
 
@@ -105,5 +104,3 @@ class TestCmpH5Select(_TestBase):
             _d = dict(n=n, m=nalignments, p=p)
             msg = "Incorrect alignments (got {n} expected {m} ) from {p}".format(**_d)
             self.assertEqual(n, nalignments, msg)
-
-
