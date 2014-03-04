@@ -34,9 +34,9 @@ import logging
 import h5py as H5
 import numpy as NP
 
-from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
-from pbtools.pbh5tools.CmpH5Format import CmpH5Format
-from pbtools.pbh5tools.CmpH5Utils import copyAttributes, deleteAttrIfExists
+from pbh5tools.PBH5ToolsException import PBH5ToolsException
+from pbh5tools.CmpH5Format import CmpH5Format
+from pbh5tools.CmpH5Utils import copyAttributes, deleteAttrIfExists
 
 def makeRefName(rID):
     return "ref%06d" % rID

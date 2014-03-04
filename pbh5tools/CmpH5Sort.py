@@ -38,8 +38,8 @@ import tempfile
 import h5py as H5
 import numpy as NP
 
-from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
-from pbtools.pbh5tools.CmpH5Format import CmpH5Format
+from pbh5tools.PBH5ToolsException import PBH5ToolsException
+from pbh5tools.CmpH5Format import CmpH5Format
 
 import pbcore.io.rangeQueries as RQ
 
@@ -364,7 +364,7 @@ def cmpH5Sort(inFile, outFile, tmpDir, deep = True, useNative = True,
 
     ## Setup the indexer.
     if (useNative):
-        from pbtools.pbh5tools import Indexer
+        from pbh5tools import Indexer
         myIndexer = Indexer.Indexer().compute
 
     def computeIndices(tStart, tEnd):

@@ -38,15 +38,15 @@ import shutil
 import pkg_resources
 
 from pbcore.util.ToolRunner import PBMultiToolRunner
-from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
+from pbh5tools.PBH5ToolsException import PBH5ToolsException
 
-from pbtools.pbh5tools.CmpH5Select import cmpH5Select
-from pbtools.pbh5tools.CmpH5Merge import cmpH5Merge
-from pbtools.pbh5tools.CmpH5Sort import cmpH5Sort
-from pbtools.pbh5tools.CmpH5Stats import cmpH5Stats
-from pbtools.pbh5tools.CmpH5Compare import cmpH5Equal, cmpH5Summarize, cmpH5Validate
-from pbtools.pbh5tools.Metrics import DocumentedMetric,DocumentedStatistic
-from pbtools.pbh5tools._version import __version__
+from pbh5tools.CmpH5Select import cmpH5Select
+from pbh5tools.CmpH5Merge import cmpH5Merge
+from pbh5tools.CmpH5Sort import cmpH5Sort
+from pbh5tools.CmpH5Stats import cmpH5Stats
+from pbh5tools.CmpH5Compare import cmpH5Equal, cmpH5Summarize, cmpH5Validate
+from pbh5tools.Metrics import DocumentedMetric,DocumentedStatistic
+from pbh5tools._version import __version__
 
 class CmpH5ToolsRunner(PBMultiToolRunner):
     def __init__(self):

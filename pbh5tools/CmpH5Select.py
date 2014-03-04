@@ -40,10 +40,10 @@ import numpy as NP
 
 from pbcore.io import CmpH5Reader
 
-from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
-from pbtools.pbh5tools.CmpH5Format import CmpH5Format
-from pbtools.pbh5tools.CmpH5Utils import *
-from pbtools.pbh5tools.Metrics import *
+from pbh5tools.PBH5ToolsException import PBH5ToolsException
+from pbh5tools.CmpH5Format import CmpH5Format
+from pbh5tools.CmpH5Utils import *
+from pbh5tools.Metrics import *
 
 def cmpH5Select(inCmpFile, outCmp, idxs = None,
                 groupByStr = None, whereStr = None,

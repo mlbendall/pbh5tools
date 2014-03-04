@@ -35,8 +35,8 @@ import numpy as NP
 import h5py as H5
 
 from pbcore.io import CmpH5Reader
-from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
-from pbtools.pbh5tools.Metrics import *
+from pbh5tools.PBH5ToolsException import PBH5ToolsException
+from pbh5tools.Metrics import *
 from mlab import rec2csv, rec2txt
 
 def cmpH5Equal(inCmp1, inCmp2):

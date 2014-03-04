@@ -36,7 +36,7 @@ import inspect
 import re
 
 from pbcore.io import CmpH5Reader
-from pbtools.pbh5tools.PBH5ToolsException import PBH5ToolsException
+from pbh5tools.PBH5ToolsException import PBH5ToolsException
 
 def hasEval(thing):
     return 'eval' in dir(thing)

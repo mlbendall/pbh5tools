@@ -35,7 +35,7 @@ from pbcore.io import (BasH5Reader,
                        FastaWriter,
                        FastqWriter)
 
-from pbtools.pbh5tools._version import __version__
+from pbh5tools._version import __version__
 
 def _fileType(arg):
     """
