@@ -46,8 +46,8 @@ from pbh5tools.CmpH5Utils import *
 from pbh5tools.Metrics import *
 
 def cmpH5Select(inCmpFile, outCmp, idxs = None,
-                groupByStr = None, whereStr = None,
-                outDir = "."):
+                groupByStr = None, groupByCsv = None, 
+                whereStr = None, outDir = "."):
     """Take a vector of indices or a where expression and select a set
     of alignments. If a groupBy is specified, then produce a cmp.h5
     file for each distinct member of the grouping."""
@@ -59,7 +59,8 @@ def cmpH5Select(inCmpFile, outCmp, idxs = None,
         idxVecs = query(CmpH5Reader(inCmpFile),
                         what = AlignmentIdx,
                         where = where,
-                        groupBy = groupBy)
+                        groupBy = groupBy,
+                        groupByCsv = groupByCsv )
         keys = idxVecs.keys()
 
         ## XXX: Should the resultant files be sorted? 

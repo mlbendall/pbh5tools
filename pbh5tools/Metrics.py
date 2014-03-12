@@ -283,6 +283,21 @@ def toRecArray(res):
             recArrays.append(convertToRecArray(res[k], k))
         return NP.hstack(recArrays)
 
+def groupCsv(csvFile, idxs, reader):
+    #csvFile is a csv text file with header. first column used as group name
+    #other columns are from 'listMetrics'
+    mapValToGrp = {} 
+    with open( csvFile ) as ofile:
+        header = ofile.readline().rstrip('\n')
+        #eval header after replacing s/,/* to conform to groupByStr format
+        #do this here before walking thru file in case of errors in heading
+        groupBy = eval('*'.join(header.split(',')[1:]))
+        for line in ofile.readlines():
+            columns = line.rstrip('\n').split(',')
+            mapValToGrp[ ':'.join(columns[1:]) ] = columns[0] 
+    return [ mapValToGrp.get(val,'NotInCsv') for val in groupBy.eval(reader,idxs) ]
+        
+
 # Stats
 class Min(Statistic):
     def f(self, x):
@@ -534,9 +549,13 @@ UnrolledReadLength  = _UnrolledReadLength()
 DefaultSortBy       = Tbl(alignmentIdx = AlignmentIdx)
 
 def query(reader, what = DefaultWhat, where = DefaultWhere,
-          groupBy = DefaultGroupBy, sortBy = DefaultSortBy, limit = None):
+          groupBy = DefaultGroupBy, groupByCsv = None, 
+          sortBy = DefaultSortBy, limit = None):
     idxs = NP.where(where.eval(reader, range(0, len(reader))))[0]
-    groupBy = groupBy.eval(reader, idxs)
+    if groupByCsv:
+        groupBy = groupCsv(groupByCsv, idxs, reader)
+    else:
+        groupBy = groupBy.eval(reader, idxs)
     results = {}
     
     for k,v in split(idxs, groupBy).items():

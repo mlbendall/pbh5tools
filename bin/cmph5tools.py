@@ -78,6 +78,8 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                             help='indices to select')
         parser.add_argument('--groupBy', metavar='groupBy-expression',
                             type = str, help='groupBy expression, e.g., Movie*Barcode')
+        parser.add_argument('--groupByCsv', metavar='groupByCsv',
+                            type = str, help='groupByCsv file, e.g. Group,Movie,Barcode\\ngroupname,movie,barcode')
         parser.add_argument('--where', metavar='where-expression',
                             type = str, help='where expression, e.g., ReadLength > 500')
         parser.add_argument('--outDir', metavar='outputDir',
@@ -187,6 +189,7 @@ class CmpH5ToolsRunner(PBMultiToolRunner):
                 cmpH5Select(self.args.inCmp, self.args.outCmp,
                             idxs = self.args.idxs, whereStr = self.args.where,
                             groupByStr = self.args.groupBy,
+                            groupByCsv = self.args.groupByCsv,
                             outDir = self.args.outDir)
 
             elif cmd == 'stats':

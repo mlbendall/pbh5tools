@@ -62,13 +62,14 @@ def makeTblFromInput(exprStr, defaultValue):
 def cmpH5Stats(cmpH5Filename, whatStr = None, whereStr = None,
                groupByStr = None, sortByStr = None, limit = None, outFile = None):
 
-    reader  = CmpH5Reader(cmpH5Filename)
-    where   = DefaultWhere if whereStr is None else eval(whereStr)
-    groupBy = DefaultGroupBy if groupByStr is None else eval(groupByStr)
-    what    = makeTblFromInput(whatStr, DefaultWhat)
-    sortBy  = makeTblFromInput(sortByStr, DefaultSortBy)
+    reader     = CmpH5Reader(cmpH5Filename)
+    where      = DefaultWhere if whereStr is None else eval(whereStr)
+    groupBy    = DefaultGroupBy if groupByStr is None else eval(groupByStr)
+    groupByCsv = None
+    what       = makeTblFromInput(whatStr, DefaultWhat)
+    sortBy     = makeTblFromInput(sortByStr, DefaultSortBy)
 
-    res = query(reader, what, where, groupBy, sortBy, limit)
+    res = query(reader, what, where, groupBy, groupByCsv, sortBy, limit)
     res = toRecArray(res)
     if not outFile:
         prettyPrint(res)
