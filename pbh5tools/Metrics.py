@@ -288,12 +288,12 @@ def groupCsv(csvFile, idxs, reader):
     #other columns are from 'listMetrics'
     mapValToGrp = {} 
     with open( csvFile ) as ofile:
-        header = ofile.readline().rstrip('\n')
+        header = ofile.readline().rstrip('\r\n')
         #eval header after replacing s/,/* to conform to groupByStr format
         #do this here before walking thru file in case of errors in heading
         groupBy = eval('*'.join(header.split(',')[1:]))
         for line in ofile.readlines():
-            columns = line.rstrip('\n').split(',')
+            columns = line.rstrip('\r\n').split(',')
             mapValToGrp[ ':'.join(columns[1:]) ] = columns[0] 
     return [ mapValToGrp.get(val,'NotInCsv') for val in groupBy.eval(reader,idxs) ]
         
