@@ -38,6 +38,8 @@ import re
 from pbcore.io import CmpH5Reader
 from pbh5tools.PBH5ToolsException import PBH5ToolsException
 
+NOTINCSV_LABEL = 'NotInCsv'
+
 def hasEval(thing):
     return 'eval' in dir(thing)
 
@@ -295,7 +297,7 @@ def groupCsv(csvFile, idxs, reader):
         for line in ofile.readlines():
             columns = line.rstrip('\r\n').split(',')
             mapValToGrp[ ':'.join(columns[1:]) ] = columns[0] 
-    return [ mapValToGrp.get(val,'NotInCsv') for val in groupBy.eval(reader,idxs) ]
+    return [ mapValToGrp.get(val,NOTINCSV_LABEL) for val in groupBy.eval(reader,idxs) ]
         
 
 # Stats

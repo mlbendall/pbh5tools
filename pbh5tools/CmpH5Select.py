@@ -68,6 +68,9 @@ def cmpH5Select(inCmpFile, outCmp, idxs = None,
             doSelect(inCmpFile, outCmp, idxVecs[keys[0]])
         else:
             for k in keys:
+                #For groupByCsv, skip group of indexes not identified in csv
+                if k == NOTINCSV_LABEL:
+                    continue
                 logging.debug("Processing output for %s" % str(k))
                 doSelect(inCmpFile, "/".join([outDir, "%s.cmp.h5" % str(k)]), idxVecs[k])
 
