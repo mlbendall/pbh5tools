@@ -69,7 +69,10 @@ def processMovies(outCmp, inCmps, fmt):
                                 l(i, fmt.MOVIE_INFO_NAME),
                                 l(i, fmt.MOVIE_INFO_FRAME_RATE),
                                 l(i, fmt.MOVIE_INFO_RUN),
-                                l(i, fmt.MOVIE_INFO_EXP)))
+                                l(i, fmt.MOVIE_INFO_EXP),
+                                l(i, fmt.MOVIE_INFO_BINDING_KIT),
+                                l(i, fmt.MOVIE_INFO_SEQUENCING_KIT),
+                                l(i, fmt.MOVIE_INFO_SOFTWARE_VERSION)))
                 newMovieID += 1
     # write the information to the new file.
     w(0, fmt.MOVIE_INFO_ID)
@@ -77,6 +80,11 @@ def processMovies(outCmp, inCmps, fmt):
     w(2, fmt.MOVIE_INFO_FRAME_RATE)
     w(3, fmt.MOVIE_INFO_RUN)
     w(4, fmt.MOVIE_INFO_EXP)
+    w(5, fmt.MOVIE_INFO_BINDING_KIT)
+    w(6, fmt.MOVIE_INFO_SEQUENCING_KIT)
+    w(7, fmt.MOVIE_INFO_SOFTWARE_VERSION)
+
+
 
     return umovies
 

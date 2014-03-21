@@ -57,6 +57,9 @@ class CmpH5Format:
         self.MOVIE_INFO_EXP        = '/'.join([self.MOVIE_INFO, 'Exp'])
         self.MOVIE_INFO_FRAME_RATE = '/'.join([self.MOVIE_INFO, 'FrameRate'])
         self.MOVIE_INFO_RUN        = '/'.join([self.MOVIE_INFO, 'Run'])
+        self.MOVIE_INFO_BINDING_KIT      = '/'.join([self.MOVIE_INFO, 'BindingKit'])
+        self.MOVIE_INFO_SEQUENCING_KIT   = '/'.join([self.MOVIE_INFO, 'SequencingKit'])
+        self.MOVIE_INFO_SOFTWARE_VERSION = '/'.join([self.MOVIE_INFO, 'SoftwareVersion'])
 
         (self.ID, self.ALN_ID, self.MOVIE_ID, self.REF_ID, self.TARGET_START,
          self.TARGET_END, self.RC_REF_STRAND, self.HOLE_NUMBER, self.SET_NUMBER,
@@ -71,4 +74,3 @@ class CmpH5Format:
         # sorting
         self.INDEX_ATTR = "Index"
         self.INDEX_ELTS = ['REF_ID', 'TARGET_START', 'TARGET_END']
-
