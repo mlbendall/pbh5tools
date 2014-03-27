@@ -3,6 +3,7 @@
 
   $ cmph5tools.py select --groupBy Barcode \
   > --where "(Barcode == 'F_42--R_42') | (Barcode == 'F_28--R_28')" $INCMP
+  $ cmph5tools.py sort --inPlace F_42--R_42.cmp.h5
   $ cmph5tools.py merge --outFile m1.cmp.h5 F_42--R_42.cmp.h5 \
   > F_28--R_28.cmp.h5
 

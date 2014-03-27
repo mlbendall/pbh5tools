@@ -53,7 +53,9 @@ def copyAttributes(inDs, outDs):
         if isinstance(elt, basestring):
             # h5py wants to simplify things down, so I think that this
             # is a possibility.
-            newDtype = H5.special_dtype(vlen = str)
+            # preserve numpy string type if possible
+            # the h5.special_dtype defined below will lose dtype.
+            newDtype = elt.dtype if hasattr(elt,'dtype') else H5.special_dtype(vlen = str)
         elif elt.dtype == 'object':
             # this has to do with a numpy problem.
             newDtype = H5.special_dtype(vlen = str)
